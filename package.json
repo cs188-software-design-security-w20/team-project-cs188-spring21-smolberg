@@ -1,6 +1,33 @@
 {
   "name": "swollberg-app",
   "version": "0.1.0",
+  "contributors": [
+    {
+      "name": "Dhruv Sharma",
+      "email": "dhruv@dhruv-sharma.com",
+      "url": "https://dhruv-sharma.com"
+    },
+    {
+      "name": "Josh Lee",
+      "email": "bohyung@ucla.edu"
+    },
+    {
+      "name": "Maksym Prokopovych",
+      "email": "maksymovi@ucla.edu"
+    },
+    {
+      "name": "Shreya Raman",
+      "email": "shreyaraman99@gmail.com"
+    },
+    {
+      "name": "Athya Uthayakumar",
+      "email": "athyauk@gmail.com"
+    },
+    {
+      "name": "Francesco Colonnese",
+      "email": "fcolonnese@ucla.edu"
+    }
+  ],
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.11.4",
