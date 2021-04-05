@@ -1,25 +1,27 @@
-import logo from './logo.svg';
-import './App.css';
+/** @jsxImportSource theme-ui */
 
-function App() {
+import { ThemeProvider } from '@theme-ui/theme-provider'
+import React, { useEffect } from 'react'
+import { Route, BrowserRouter as Router, Switch } from 'react-router-dom'
+import LandingPage from './pages/LandingPage'
+
+import theme from './theme'
+
+ const App = () => {
+
+  useEffect(() => {
+    document.title = "Swollberg"
+  }, [])
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <Router>
+      <ThemeProvider theme={theme}>
+        <Switch>
+          <Route exact path="/" component={LandingPage} />
+        </Switch>
+      </ThemeProvider>
+    </Router>
+  )
 }
 
-export default App;
+export default App
