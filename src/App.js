@@ -7,7 +7,7 @@ import { AuthContext } from './contexts/AuthContext'
 import LandingPage from './pages/LandingPage'
 import PrivateRoute from './routes/PrivateRoute'
 
-import theme from './theme'
+import theme from './styles'
 
 const App = () => {
 
