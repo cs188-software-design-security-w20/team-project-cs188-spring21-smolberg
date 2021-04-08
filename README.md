@@ -1,3 +1,13 @@
+# To run, use:
+
+:)
+
+```
+REACT_APP_GOOGLE_DRIVE_API_KEY=<your_api_key> \
+REACT_APP_GOOGLE_DRIVE_CLIENT_ID=<your_client_id> \
+yarn start
+```
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
