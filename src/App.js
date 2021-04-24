@@ -6,14 +6,29 @@ import { Route, BrowserRouter as Router, Switch } from 'react-router-dom'
 import { AuthContext } from './contexts/AuthContext'
 import LandingPage from './pages/LandingPage'
 import PrivateRoute from './routes/PrivateRoute'
+// import { useCookies } from 'react-cookie';
 
 import theme from './styles'
 
 const App = () => {
 
+  // const [cookies, setCookie] = useCookies(['user']);
+  // let authorized = true;
+
   useEffect(() => {
-    document.title = "Smolberg"
+    document.title = "Smolberg";
   }, [])
+  // useEffect(() => {
+  //   // if(authorized && cookies["user"] === "undefined") {
+  //   //   console.log('making cookie');
+  //   //   setCookie('user', 'pw', {path: '/'})
+  //   // } else if (!authorized && cookies["user"] !== "undefined"){
+  //   //   console.log(cookies["user"]);
+  //   // }
+  //   console.log("before");
+  //   setCookie('user', 'pw', {path: '/'});
+  //   console.log(cookies);
+  // }, [authorized, cookies, setCookie])
 
   return (
     <Router>
