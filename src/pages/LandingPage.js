@@ -1,10 +1,10 @@
 import React from 'react'
+import Container from '../components/Container'
 
 const LandingPage = () => {
     return (
-        <div>
-            Landing Page
-        </div>
+        <Container>
+        </Container>
     )
 }
 
