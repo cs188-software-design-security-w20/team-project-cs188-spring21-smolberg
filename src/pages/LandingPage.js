@@ -3,23 +3,29 @@ import Container from '../components/Container'
 import { useCookies } from 'react-cookie';
 
 const LandingPage = () => {
-    const [cookies, setCookie] = useCookies(['user']);
+    const [cookies, setCookie, removeCookie] = useCookies(['user']);
     let authorized = false;
 
+    // toggle 'authorized'
     const checkAuth = () => {
         authorized = !authorized;
         console.log(authorized);
     }
 
+    // check if a cookie exists
     const checkCookie = () => {
-        if (authorized && cookies['user'] !== 'undefined') {
-            console.log(cookies['user'] + ' yay!');
+        if (authorized) {
+            if (cookies.user !== 'undefined')
+                console.log(`user cookie: ${cookies['user']}`);
+            else
+                makeCookie("default");
         }
         else {
-            console.log("boo");
+            console.log("unauthorized");
         }
     }
 
+    // make a new cookie
     const makeCookie = (password) => {
         setCookie("user", password, {
             path: "/",
@@ -29,9 +35,25 @@ const LandingPage = () => {
         })
         console.log(`Made cookie ${password}`)
     }
-    useEffect(() => {
+
+    // check if cookie is valid
+    const validCookie = () => {
+        if (cookies['user'] !== 'yes') {
+            console.log("Invalid cookie, creating new one");
+            removeCookie("user")
+            makeCookie("yes");
+        }
+    }
+
+    // temp button handler
+    const handleSubmit = (event) => {
+        event.preventDefault()
+        const password = event.target[0].value;
+        makeCookie(password);
+    }
+    // useEffect(() => {
         
-    }, [authorized])
+    // }, [authorized])
 
     return (
         <Container>
@@ -39,8 +61,9 @@ const LandingPage = () => {
                 Landing Page
             </h1>
             <button onClick={checkAuth}>Toggle Auth</button>
-            <button onClick={checkCookie}>Check Cookie</button>
-            <form onSubmit={makeCookie('name')}>
+            <button onClick={checkCookie}>Get Cookie</button>
+            <button onClick={validCookie}>Valid Cookie</button>
+            <form onSubmit={handleSubmit}>
                 <label>
                     Password:
                     <input type="text" name="name" />
