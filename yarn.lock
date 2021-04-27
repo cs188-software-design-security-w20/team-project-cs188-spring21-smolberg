@@ -1561,6 +1561,24 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
+"@fluentui/dom-utilities@^1.1.2":
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/@fluentui/dom-utilities/-/dom-utilities-1.1.2.tgz#1a53e51e1ab1d40696ae7d355a970c68d496845f"
+  integrity sha512-XqPS7l3YoMwxdNlaYF6S2Mp0K3FmVIOIy2K3YkMc+eRxu9wFK6emr2Q/3rBhtG5u/On37NExRT7/5CTLnoi9gw==
+  dependencies:
+    "@uifabric/set-version" "^7.0.24"
+    tslib "^1.10.0"
+
+"@fluentui/theme@^1.7.4":
+  version "1.7.4"
+  resolved "https://registry.yarnpkg.com/@fluentui/theme/-/theme-1.7.4.tgz#8582bab5a7445585c631d05d44b5ebb56f18b6ba"
+  integrity sha512-o4eo7lstLxxXl1g2RR9yz18Yt8yjQO/LbQuZjsiAfv/4Bf0CRnb+3j1F7gxIdBWAchKj9gzaMpIFijfI98pvYQ==
+  dependencies:
+    "@uifabric/merge-styles" "^7.19.2"
+    "@uifabric/set-version" "^7.0.24"
+    "@uifabric/utilities" "^7.33.5"
+    tslib "^1.10.0"
+
 "@hapi/address@2.x.x":
   version "2.1.4"
   resolved "https://registry.yarnpkg.com/@hapi/address/-/address-2.1.4.tgz#5d67ed43f3fd41a69d4b9ff7b56e7c0d1d0a81e5"
@@ -1784,6 +1802,11 @@
   version "1.6.22"
   resolved "https://registry.yarnpkg.com/@mdx-js/react/-/react-1.6.22.tgz#ae09b4744fddc74714ee9f9d6f17a66e77c43573"
   integrity sha512-TDoPum4SHdfPiGSAaRBw7ECyI8VaHpK8GJugbJIJuqyh6kzw9ZLJZW3HGL3NNrJGxcAixUvqROm+YuQOo5eXtg==
+
+"@microsoft/load-themed-styles@^1.10.26":
+  version "1.10.163"
+  resolved "https://registry.yarnpkg.com/@microsoft/load-themed-styles/-/load-themed-styles-1.10.163.tgz#db976c1f738a7bbd47bd10618e9c306cb2f6b041"
+  integrity sha512-6L4BvcR5kKDUlyepEwEafO0NO83BLn7zW8GZfgu6fq7GpSGhrZMVLeiCiMWs7U29azBTaDhXKFkw1nCDeSX/fg==
 
 "@nodelib/fs.scandir@2.1.4":
   version "2.1.4"
@@ -2588,6 +2611,53 @@
   dependencies:
     "@typescript-eslint/types" "4.20.0"
     eslint-visitor-keys "^2.0.0"
+
+"@uifabric/file-type-icons@^7.6.30":
+  version "7.6.30"
+  resolved "https://registry.yarnpkg.com/@uifabric/file-type-icons/-/file-type-icons-7.6.30.tgz#71a2e72e818e094a66c2e1bd7fe0f305b0814f5b"
+  integrity sha512-NpZ5kKFxmT60EvHzKSD9XpKYDLBCJDZw3ae3WhW4k2z67RKo5yOZ76hzN9y3UWW3E0qMw9r2+zFF7JukjQYHtw==
+  dependencies:
+    "@uifabric/set-version" "^7.0.24"
+    "@uifabric/styling" "^7.19.0"
+    tslib "^1.10.0"
+
+"@uifabric/merge-styles@^7.19.2":
+  version "7.19.2"
+  resolved "https://registry.yarnpkg.com/@uifabric/merge-styles/-/merge-styles-7.19.2.tgz#e020adc2f9b238f0feb855274dfeedaf6d5822a7"
+  integrity sha512-kTlhwglDqwVgIaJq+0yXgzi65plGhmFcPrfme/rXUGMJZoU+qlGT5jXj5d3kuI59p6VB8jWEg9DAxHozhYeu0g==
+  dependencies:
+    "@uifabric/set-version" "^7.0.24"
+    tslib "^1.10.0"
+
+"@uifabric/set-version@^7.0.24":
+  version "7.0.24"
+  resolved "https://registry.yarnpkg.com/@uifabric/set-version/-/set-version-7.0.24.tgz#8c67d8f1d67c1636a170efa8b622132da2d294a9"
+  integrity sha512-t0Pt21dRqdC707/ConVJC0WvcQ/KF7tKLU8AZY7YdjgJpMHi1c0C427DB4jfUY19I92f60LOQyhJ4efH+KpFEg==
+  dependencies:
+    tslib "^1.10.0"
+
+"@uifabric/styling@^7.19.0":
+  version "7.19.0"
+  resolved "https://registry.yarnpkg.com/@uifabric/styling/-/styling-7.19.0.tgz#10bef6152cc94bd72c22da923f766b8197f63652"
+  integrity sha512-fXComDtGV7dHF4rP4cLHwI6fC+1f/nvPavpMBz4IQdySwixta9TVMKbzt0OA6i0mJztqZCVAd27F/sl9R/JmcQ==
+  dependencies:
+    "@fluentui/theme" "^1.7.4"
+    "@microsoft/load-themed-styles" "^1.10.26"
+    "@uifabric/merge-styles" "^7.19.2"
+    "@uifabric/set-version" "^7.0.24"
+    "@uifabric/utilities" "^7.33.5"
+    tslib "^1.10.0"
+
+"@uifabric/utilities@^7.33.5":
+  version "7.33.5"
+  resolved "https://registry.yarnpkg.com/@uifabric/utilities/-/utilities-7.33.5.tgz#4e7ed4bab725c054005e9ac37b0f01d743089be4"
+  integrity sha512-I+Oi0deD/xltSluFY8l2EVd/J4mvOaMljxKO2knSD9/KoGDlo/o5GN4gbnVo8nIt76HWHLAk3KtlJKJm6BhbIQ==
+  dependencies:
+    "@fluentui/dom-utilities" "^1.1.2"
+    "@uifabric/merge-styles" "^7.19.2"
+    "@uifabric/set-version" "^7.0.24"
+    prop-types "^15.7.2"
+    tslib "^1.10.0"
 
 "@webassemblyjs/ast@1.9.0":
   version "1.9.0"
@@ -8161,6 +8231,11 @@ mkdirp@^1.0.3, mkdirp@^1.0.4:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/mkdirp/-/mkdirp-1.0.4.tgz#3eb5ed62622756d79a5f0e2a221dfebad75c2f7e"
   integrity sha512-vVqVZQyf3WLx2Shd0qJ9xuvqgAyKPLAiqITEtqW0oIUjzo3PePDd6fW9iFz30ef7Ysp/oiWqbhszeGWW2T6Gzw==
+
+moment@^2.29.1:
+  version "2.29.1"
+  resolved "https://registry.yarnpkg.com/moment/-/moment-2.29.1.tgz#b2be769fa31940be9eeea6469c075e35006fa3d3"
+  integrity sha512-kHmoybcPV8Sqy59DwNDY3Jefr64lK/by/da0ViFcuA4DH0vQg5Q6Ze5VimxkfQNSC+Mls/Kx53s7TjP1RhFEDQ==
 
 move-concurrently@^1.0.1:
   version "1.0.1"

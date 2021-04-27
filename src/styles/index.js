@@ -94,6 +94,15 @@ const theme = {
       letterSpacing: '-0.03em',
       mt: 3,
     },
+    defaultbold: {
+      variant: 'text.default',
+      fontWeight: 'bold'
+    },
+    small: {
+      variant: 'text.default',
+      fontSize: 1,
+      fontWeight: 'default',
+    },
     subtitle: {
       variant: 'default',
       my: 2,

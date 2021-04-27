@@ -1,4 +1,5 @@
-import React, { StrictMode, useEffect } from 'react'
+import React from 'react'
+import Container from '../components/Container'
 import { useCookies } from 'react-cookie';
 
 const LandingPage = () => {
@@ -33,7 +34,7 @@ const LandingPage = () => {
     }, [authorized])
 
     return (
-        <div>
+        <Container>
             <h1>
                 Landing Page
             </h1>
@@ -46,7 +47,7 @@ const LandingPage = () => {
                 </label>
                 <input type="submit" value="Submit" />
             </form>
-        </div>
+        </Container>
     )
 }
 
