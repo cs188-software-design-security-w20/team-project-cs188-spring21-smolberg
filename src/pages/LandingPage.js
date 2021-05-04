@@ -1,11 +1,11 @@
 import React from 'react'
-import GDriveAuth from './components/GDriveAuth'
+import Container from '../components/Container'
+
 const LandingPage = () => {
     return (
-        <div>
-            Landing Page
+        <Container>
             <GDriveAuth/>
-        </div>
+        </Container>
     )
 }
 

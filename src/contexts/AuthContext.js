@@ -1,6 +1,6 @@
 import React, { useState, useContext } from 'react'
 
-const AuthCtx = React.createContext()
+const AuthContext = React.createContext()
 
 /**
  * 
@@ -9,24 +9,50 @@ const AuthCtx = React.createContext()
  */
 
 const useAuth = () => {
-    return useContext(AuthCtx)
+    return useContext(AuthContext)
 }
 
-const AuthContext = ( { children } ) => {
+const AuthProvider = ( { children } ) => {
 
-    const [currentUser, setCurrentUser] = useState()
-    // TODO: Change this to true when auth logic is implemented
+    // TODO: Make this a null init. Right now this override helps testing
+    const [currentUser, setCurrentUser] = useState('f')
+    // Don't render anything before auth status has been realized
+    // Probably won't need this, except on the pages first load. For now it shouldn't mess anything up
     const [loading, setLoading] = useState(false)
 
-    const vals = {
-        currentUser
+    const signup = () => {
+        setLoading(true)
+        // TODO
+        setLoading(false)
+    }
+
+    const login = (a) => {
+        setLoading(true)
+        // setCurrentUser(---user obj---)
+        // TODO
+        console.log(a)
+        setLoading(false)
+    }
+
+    const logout = () => {
+        setLoading(true)
+        setCurrentUser(null)
+        // TODO
+        setLoading(false)
+    }
+
+    const authTools = {
+        currentUser,
+        login,
+        signup,
+        logout
     }
 
     return (
-        <AuthCtx.Provider value={vals}>
+        <AuthContext.Provider value={authTools}>
             {!loading && children}
-        </AuthCtx.Provider>
+        </AuthContext.Provider>
     )
 }
 
-export { AuthContext, useAuth }
+export { AuthProvider, useAuth }
