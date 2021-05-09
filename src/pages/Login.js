@@ -5,6 +5,8 @@ import { useAuth } from '../contexts/AuthContext'
 import useInput from '../hooks/useInput'
 
 import googleLogo from '../assets/logos/google_mini.svg'
+import { ReactComponent as LeftArrow } from '../assets/ui-icons/left-arrow.svg'
+import { ReactComponent as RightArrow } from '../assets/ui-icons/right-arrow.svg'
 
 const PageIndicatorButton = (props) => {
     return <IconButton aria-label="Toggle dark mode" enabled={false} onClick={props.onClick} sx={{ cursor: "pointer" }}>
@@ -51,8 +53,8 @@ const OAuthWindow = (props) => {
             width: "80%",
             textAlign: "center"
         }}>
-            <Text variant="subheading" mt={2} mb={2}>Connect to Google Drive</Text>
-            <Text mb={2}>Connect your Google account so this app can access your drive</Text>
+            <Text variant="subheading" mt={2} mb={4}>Connect to Google Drive</Text>
+            <Text mb={1}>Connect your Google account so this app can access your drive</Text>
             <Flex sx={{ height: "100%", width: '100%', alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
                 <Button variant="black" mb={2} onClick={handleClick} disabled={props.currentOAuthUser != null}
                     sx={{
@@ -69,7 +71,14 @@ const OAuthWindow = (props) => {
                         <Text>Sign in with Google</Text>
                     </Flex>
                 </Button>
-                {props.currentOAuthUser && <Text>You are signed in to Google. <Link onClick={swapAccount}>Click here</Link> to sign out or change your account</Text>}
+                {props.currentOAuthUser &&
+                    <Flex sx={{ flexDirection: "column", alignItems: "center" }}>
+                        <Text mb={2}>You are signed in to Google. <Link onClick={swapAccount}>Click here</Link> to sign out or change your account</Text>
+                        <Flex sx={{ alignItems: "center", cursor: "pointer" }} onClick={() => props.movePage()}>
+                            <Link mr={2}>Continue to master password</Link>
+                            <RightArrow width="15px" height="15px" />
+                        </Flex>
+                    </Flex>}
             </Flex>
         </Flex>
     )
@@ -84,9 +93,15 @@ const MPWWindow = (props) => {
             width: "80%",
             textAlign: "center"
         }}>
-            <Text variant="subheading" mt={2} mb={2}>Enter your Master Password</Text>
+            <Text variant="subheading" mt={2} mb={4}>Enter your Master Password</Text>
             <Text mb={2}>Verify your master password, so we can encrypt and decrypt your documents</Text>
             <Flex sx={{ height: "100%", alignItems: "center", justifyContent: "center", flexDirection: "column" }}>
+                <Flex mb={3} sx={{ flexDirection: "column", alignItems: "center" }}>
+                    <Flex sx={{ width: "100%", alignItems: "center", cursor: "pointer" }} onClick={() => props.goBack()}>
+                        <LeftArrow width="15px" height="15px" />
+                        <Link ml={2}>Log in with a different Google account</Link>
+                    </Flex>
+                </Flex>
                 <Input mb={2} type="password" {...props.passwordInput.bind}></Input>
                 <Button onClick={props.handleLogin}>Login</Button>
             </Flex>
@@ -97,7 +112,7 @@ const MPWWindow = (props) => {
 const Login = () => {
     const { currentOAuthUser, loginOAuth, OAuthLogOut } = useAuth()
     const [currentPage, setCurrentPage] = useState(currentOAuthUser ? 2 : 1)
-    const [canEnterPwd, setCanEnterPwd] = useState(currentOAuthUser != null)
+    const [canEnterPwd, setCanEnterPwd] = useState(currentOAuthUser !== null)
     const passwordInput = useInput('')
 
     const handleOAuthLogin = async () => {
@@ -115,7 +130,7 @@ const Login = () => {
     return (
         <Container>
             <Flex sx={{ justifyContent: "center" }}>
-                <Card mt={4} sx={{ height: "300px", width: "500px" }}>
+                <Card mt={4} sx={{ height: "350px", width: "500px" }}>
                     <Flex sx={{ height: "100%", flexDirection: "column", alignItems: "center", justifyContent: "space-between" }}>
                         {currentPage === 1
                             ? <OAuthWindow handleOAuthLogin={handleOAuthLogin}
@@ -123,7 +138,7 @@ const Login = () => {
                                 OAuthLogOut={OAuthLogOut}
                                 movePage={() => setCurrentPage(2)}
                                 setComplete={(v) => setCanEnterPwd(v)} />
-                            : <MPWWindow handleLogin={handleLogin} passwordInput={passwordInput} />}
+                            : <MPWWindow handleLogin={handleLogin} passwordInput={passwordInput} goBack={() => setCurrentPage(1)} />}
                         <Flex sx={{ width: "20%", justifyContent: "space-evenly" }}>
                             <PageIndicatorButton active={currentPage === 1} onClick={() => setCurrentPage(1)} />
                             <PageIndicatorButton active={currentPage === 2} onClick={() => { if (canEnterPwd) setCurrentPage(2) }} />
