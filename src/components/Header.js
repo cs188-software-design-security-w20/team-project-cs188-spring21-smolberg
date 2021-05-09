@@ -7,13 +7,15 @@ import { NavLink, useHistory, Link as RouterLink } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export default function Header() {
-    const { currentUser, logout } = useAuth()
+    const { currentUser, currentOAuthUser, logout } = useAuth()
     const [colorMode, setColorMode] = useColorMode()
     const history = useHistory()
 
+    const loggedIn = currentOAuthUser && currentUser
+
     const handleLoginButton = async (e) => {
         e.preventDefault()
-        if (currentUser) {
+        if (loggedIn) {
             await logout()
             history.push("/")
             return
@@ -64,8 +66,8 @@ export default function Header() {
                     <NavLink to="/files" sx={{ variant: "links.nav", textAlign: "center", mr: "3", width: "100px"}}>
                         Files
                     </NavLink>
-                    <Button mr={3} sx={{ height: "35px", width: "100px", verticalAlign: "middle", lineHeight: "initial" }} onClick={handleLoginButton}>{currentUser ? "Log Out" : "Log In"}</Button>
-                    <Button sx={{ height: "35px", width: "100px", verticalAlign: "middle", lineHeight: "initial" }} onClick={toggleTheme}>{toTitleCase(colorMode)}</Button>
+                    <Button mr={3} sx={{ height: "35px", width: "100px", verticalAlign: "middle", lineHeight: "initial" }} onClick={handleLoginButton}>{loggedIn ? "Log Out" : "Log In"}</Button>
+                    <Button backgroundColor="gray" sx={{ height: "35px", width: "100px", verticalAlign: "middle", lineHeight: "initial" }} onClick={toggleTheme}>{toTitleCase(colorMode)}</Button>
                 </Flex>
             </Flex>
         </Box>

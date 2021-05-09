@@ -9,7 +9,6 @@ const FileModal = ({ file, close }) => {
 
     useEffect(() => {
         const downHandler = ({ keyCode }) => {
-            console.log(keyCode)
             if (keyCode === 27) {
                 close()
             }
@@ -19,8 +18,6 @@ const FileModal = ({ file, close }) => {
             window.removeEventListener("keydown", downHandler);
         };
     }, [close]);
-
-    console.log(file.lastModTime)
 
     return (
         <Flex sx={{

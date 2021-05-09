@@ -80,6 +80,10 @@ const theme = {
       fontWeight: 'heading',
       lineHeight: 'heading',
     },
+    subheading: {
+      variant: 'text.heading',
+      fontSize: [2, 3],
+    },
     block: {
       variant: 'default',
       my: 2,

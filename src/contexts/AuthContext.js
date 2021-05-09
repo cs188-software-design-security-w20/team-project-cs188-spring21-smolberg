@@ -21,10 +21,9 @@ const useAuth = () => {
 
 const AuthProvider = ({ children }) => {
 
-    // TODO: Make this a null init. Right now this override helps testing
+    const [currentOAuthUser, setCurrentOAuthUser] = useState(null)
     const [currentUser, setCurrentUser] = useState(null)
     // Don't render anything before auth status has been realized
-    // Probably won't need this, except on the pages first load. For now it shouldn't mess anything up
     const [loading, setLoading] = useState(false)
 
     useEffect(() => {
@@ -37,28 +36,15 @@ const AuthProvider = ({ children }) => {
                     'scope': SCOPES,
                     'discoveryDocs': DISCOVERY_DOCS
                 }).then(() => {
-                    window.gapi.auth2.getAuthInstance().isSignedIn.listen((isSignedIn) => {
-                        if (!isSignedIn) {
-                            window.gapi.auth2.getAuthInstance().signIn()
-                            return
-                        }
-                        setCurrentUser({
-                            oauth: window.gapi.auth2.getAuthInstance().currentUser,
-                            ...currentUser
-                        })
-                    })
                     if (window.gapi.auth2.getAuthInstance().isSignedIn.get()) {
-                        setCurrentUser({
-                            oauth: window.gapi.auth2.getAuthInstance().currentUser,
-                            ...currentUser
-                        })
+                        setCurrentOAuthUser(window.gapi.auth2.getAuthInstance().currentUser)
                     }
                 }, (e) => console.log(e.details))
             })
         }
         f()
         setLoading(false)
-    }, [currentUser])
+    }, [])
 
     const signup = () => {
         setLoading(true)
@@ -66,15 +52,15 @@ const AuthProvider = ({ children }) => {
         setLoading(false)
     }
 
-    const updateOauthStatus = (isSignedIn) => {
+    const updateOAuthStatus = async (isSignedIn) => {
         if (!isSignedIn) {
-            window.gapi.auth2.getAuthInstance().signIn()
-            return
+            try {
+                await window.gapi.auth2.getAuthInstance().signIn()
+            } catch {
+                throw Error()
+            }
         }
-        setCurrentUser({
-            oauth: window.gapi.auth2.getAuthInstance().currentUser,
-            ...currentUser
-        })
+        setCurrentOAuthUser(window.gapi.auth2.getAuthInstance().currentUser)
     }
 
     const gapiLoad = async () => {
@@ -86,15 +72,24 @@ const AuthProvider = ({ children }) => {
                 'scope': SCOPES,
                 'discoveryDocs': DISCOVERY_DOCS
             }).then(() => {
-                window.gapi.auth2.getAuthInstance().isSignedIn.listen(updateOauthStatus)
-                updateOauthStatus(window.gapi.auth2.getAuthInstance().isSignedIn.get())
+                // window.gapi.auth2.getAuthInstance().isSignedIn.listen(updateOAuthStatus)
+                updateOAuthStatus(window.gapi.auth2.getAuthInstance().isSignedIn.get())
             }, (e) => console.log(e.details))
         })
         setLoading(false)
     }
 
-    const loginOAuth = () => {
-        updateOauthStatus(window.gapi.auth2.getAuthInstance().isSignedIn.get())
+    const loginOAuth = async () => {
+        try {
+            await updateOAuthStatus(window.gapi.auth2.getAuthInstance().isSignedIn.get())
+        } catch {
+            throw Error()
+        }
+    }
+
+    const OAuthLogOut = async () => {
+        await window.gapi.auth2.getAuthInstance().signOut()
+        setCurrentOAuthUser(null)
     }
 
     const login = (user, pass) => {
@@ -107,17 +102,19 @@ const AuthProvider = ({ children }) => {
 
     const logout = () => {
         setLoading(true)
-        window.gapi.auth2.getAuthInstance().signOut()
+        OAuthLogOut()
         setCurrentUser(null)
         setLoading(false)
     }
 
     const authTools = {
         currentUser,
+        currentOAuthUser,
         gapiLoad,
         login,
         loginOAuth,
         signup,
+        OAuthLogOut,
         logout
     }
 
