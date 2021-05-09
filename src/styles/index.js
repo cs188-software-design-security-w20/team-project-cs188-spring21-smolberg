@@ -13,6 +13,7 @@ const theme = {
   colors: {
     text: '#000000',
     background: '#ffffff',
+    cardBackground: '#ffffff',
     primary: '#3333ee',
     secondary: '#111199',
     muted: '#f6f6f6',
@@ -24,6 +25,7 @@ const theme = {
       dark: {
         text: '#ffffff',
         background: '#060606',
+        cardBackground: 'rgb(28, 28, 30)',
         primary: '#33ccff',
         secondary: '#ee00ff',
         muted: '#191919',
@@ -34,6 +36,7 @@ const theme = {
       deep: {
         text: 'hsl(210, 50%, 96%)',
         background: 'hsl(230, 25%, 18%)',
+        cardBackground: 'hsl(230, 25%, 18%)',
         primary: 'hsl(260, 100%, 80%)',
         secondary: 'hsl(290, 100%, 80%)',
         highlight: 'hsl(260, 20%, 40%)',
@@ -44,6 +47,7 @@ const theme = {
       swiss: {
         text: 'hsl(10, 20%, 20%)',
         background: 'hsl(10, 10%, 98%)',
+        cardBackground: 'hsl(10, 10%, 98%)',
         primary: 'hsl(10, 80%, 50%)',
         secondary: 'hsl(10, 60%, 50%)',
         highlight: 'hsl(10, 40%, 90%)',
@@ -214,7 +218,8 @@ const theme = {
     primary: {
       padding: 2,
       borderRadius: 4,
-      boxShadow: '0 0 8px rgba(0, 0, 0, 0.125)',
+      backgroundColor: 'cardBackground',
+      boxShadow: '0 0 12px rgba(0, 0, 0, 0.125)',
     },
     compact: {
       padding: 1,
