@@ -6,6 +6,7 @@ import { Route, BrowserRouter as Router, Switch } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import Files from './pages/Files'
 import LandingPage from './pages/LandingPage'
+import Login from './pages/Login'
 import PrivateRoute from './routes/PrivateRoute'
 
 import theme from './styles'
@@ -23,6 +24,7 @@ const App = () => {
           <Switch>
             {/* Example of a regular route */}
             <Route exact path="/" component={LandingPage} />
+            <Route exact path="/login" component={Login} />
             {/* Example of a private route w/ redirects to /login if not a approved page/user */}
             <PrivateRoute exact path="/files" component={Files} />
           </Switch>

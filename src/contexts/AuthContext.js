@@ -22,21 +22,11 @@ const useAuth = () => {
 const AuthProvider = ({ children }) => {
 
     // TODO: Make this a null init. Right now this override helps testing
-    const [currentUser, setCurrentUser] = useState('eruighfu')
+    const [currentUser, setCurrentUser] = useState(null)
     // Don't render anything before auth status has been realized
     // Probably won't need this, except on the pages first load. For now it shouldn't mess anything up
     const [loading, setLoading] = useState(false)
 
-    const updateOauthStatus = (isSignedIn) => {
-        if (!isSignedIn) {
-            window.gapi.auth2.getAuthInstance().signIn()
-            return
-        }
-        setCurrentUser({
-            oauth: window.gapi.auth2.getAuthInstance().currentUser,
-            ...currentUser
-        })
-    }
 
     useEffect(() => {
         setLoading(true)
