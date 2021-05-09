@@ -5,6 +5,7 @@ import { useColorMode } from 'theme-ui'
 import React from 'react'
 import { NavLink, useHistory, Link as RouterLink } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import constants from '../constants'
 
 export default function Header() {
     const { currentUser, currentOAuthUser, logout } = useAuth()
@@ -56,7 +57,7 @@ export default function Header() {
             >
                 <Flex>
                     <RouterLink to="/" sx={{ variant: "styles.h2", textDecoration: "none", color: "text" }} css={{ cursor: "pointer" }}>
-                        Smolberg
+                        {constants.APP_NAME}
                     </RouterLink>
                 </Flex>
                 <Flex sx={{

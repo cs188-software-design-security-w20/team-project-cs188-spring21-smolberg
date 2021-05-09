@@ -3,7 +3,9 @@
 import { ThemeProvider } from '@theme-ui/theme-provider'
 import React, { useEffect } from 'react'
 import { Route, BrowserRouter as Router, Switch } from 'react-router-dom'
+import constants from './constants'
 import { AuthProvider } from './contexts/AuthContext'
+import { favicon } from './lib/misc'
 import Files from './pages/Files'
 import LandingPage from './pages/LandingPage'
 import Login from './pages/Login'
@@ -14,7 +16,8 @@ import theme from './styles'
 const App = () => {
 
   useEffect(() => {
-    document.title = "Smolberg"
+    document.title = constants.APP_NAME
+    favicon.changeFavicon('locked.png')
   }, [])
 
   return (

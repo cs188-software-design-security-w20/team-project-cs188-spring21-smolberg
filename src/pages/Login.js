@@ -1,5 +1,5 @@
 import { Flex, Input, Button, Text, Card, Image, IconButton, Link } from '@theme-ui/components'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Container from '../components/Container'
 import { useAuth } from '../contexts/AuthContext'
 import useInput from '../hooks/useInput'
@@ -7,6 +7,7 @@ import useInput from '../hooks/useInput'
 import googleLogo from '../assets/logos/google_mini.svg'
 import { ReactComponent as LeftArrow } from '../assets/ui-icons/left-arrow.svg'
 import { ReactComponent as RightArrow } from '../assets/ui-icons/right-arrow.svg'
+import constants from '../constants'
 
 const PageIndicatorButton = (props) => {
     return <IconButton aria-label="Toggle dark mode" enabled={false} onClick={props.onClick} sx={{ cursor: "pointer" }}>
@@ -110,10 +111,14 @@ const MPWWindow = (props) => {
 }
 
 const Login = () => {
-    const { currentOAuthUser, loginOAuth, OAuthLogOut } = useAuth()
+    const { currentOAuthUser, loginOAuth, OAuthLogOut, login } = useAuth()
     const [currentPage, setCurrentPage] = useState(currentOAuthUser ? 2 : 1)
     const [canEnterPwd, setCanEnterPwd] = useState(currentOAuthUser !== null)
     const passwordInput = useInput('')
+
+    useEffect(() => {
+        document.title = `${constants.APP_NAME} | Login`
+    }, [])
 
     const handleOAuthLogin = async () => {
         try {
@@ -125,6 +130,7 @@ const Login = () => {
 
     const handleLogin = (e) => {
         e.preventDefault()
+        login(passwordInput.v)
     }
 
     return (

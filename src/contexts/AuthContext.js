@@ -1,4 +1,5 @@
 import React, { useState, useContext, useEffect } from 'react'
+import { favicon } from '../lib/misc';
 
 const AuthContext = React.createContext()
 
@@ -46,6 +47,9 @@ const AuthProvider = ({ children }) => {
         setLoading(false)
     }, [])
 
+    const setLockedFavicon = () => favicon.changeFavicon('locked.png')
+    const setUnlockedFavicon = () => favicon.changeFavicon('unlocked.png')
+
     const signup = () => {
         setLoading(true)
         // TODO
@@ -92,18 +96,20 @@ const AuthProvider = ({ children }) => {
         setCurrentOAuthUser(null)
     }
 
-    const login = (user, pass) => {
+    const login = (pass) => {
         setLoading(true)
         // validate actual pwd
         // setCurrentUser(---user obj---)
         // TODO
+        setUnlockedFavicon()
         setLoading(false)
     }
 
-    const logout = () => {
+    const logout = async () => {
         setLoading(true)
-        OAuthLogOut()
+        await OAuthLogOut()
         setCurrentUser(null)
+        setLockedFavicon()
         setLoading(false)
     }
 
