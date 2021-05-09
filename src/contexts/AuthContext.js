@@ -30,31 +30,34 @@ const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         setLoading(true)
-        window.gapi.load('client:auth2', () => {
-            window.gapi.client.init({
-                'apiKey': process.env.REACT_APP_GOOGLE_DRIVE_API_KEY,
-                'clientId': process.env.REACT_APP_GOOGLE_DRIVE_CLIENT_ID,
-                'scope': SCOPES,
-                'discoveryDocs': DISCOVERY_DOCS
-            }).then(() => {
-                window.gapi.auth2.getAuthInstance().isSignedIn.listen((isSignedIn) => {
-                    if (!isSignedIn) {
-                        window.gapi.auth2.getAuthInstance().signIn()
-                        return
+        const f = async () => {
+            await window.gapi.load('client:auth2', () => {
+                window.gapi.client.init({
+                    'apiKey': process.env.REACT_APP_GOOGLE_DRIVE_API_KEY,
+                    'clientId': process.env.REACT_APP_GOOGLE_DRIVE_CLIENT_ID,
+                    'scope': SCOPES,
+                    'discoveryDocs': DISCOVERY_DOCS
+                }).then(() => {
+                    window.gapi.auth2.getAuthInstance().isSignedIn.listen((isSignedIn) => {
+                        if (!isSignedIn) {
+                            window.gapi.auth2.getAuthInstance().signIn()
+                            return
+                        }
+                        setCurrentUser({
+                            oauth: window.gapi.auth2.getAuthInstance().currentUser,
+                            ...currentUser
+                        })
+                    })
+                    if (window.gapi.auth2.getAuthInstance().isSignedIn.get()) {
+                        setCurrentUser({
+                            oauth: window.gapi.auth2.getAuthInstance().currentUser,
+                            ...currentUser
+                        })
                     }
-                    setCurrentUser({
-                        oauth: window.gapi.auth2.getAuthInstance().currentUser,
-                        ...currentUser
-                    })
-                })
-                if (window.gapi.auth2.getAuthInstance().isSignedIn.get()) {
-                    setCurrentUser({
-                        oauth: window.gapi.auth2.getAuthInstance().currentUser,
-                        ...currentUser
-                    })
-                }
-            }, (e) => console.log(e.details))
-        })
+                }, (e) => console.log(e.details))
+            })
+        }
+        f()
         setLoading(false)
     }, [currentUser])
 
@@ -63,7 +66,6 @@ const AuthProvider = ({ children }) => {
         // TODO
         setLoading(false)
     }
-    console.log(window.gapi)
 
     const updateOauthStatus = (isSignedIn) => {
         if (!isSignedIn) {
