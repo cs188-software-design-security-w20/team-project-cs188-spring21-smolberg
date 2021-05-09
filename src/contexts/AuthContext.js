@@ -27,7 +27,6 @@ const AuthProvider = ({ children }) => {
     // Probably won't need this, except on the pages first load. For now it shouldn't mess anything up
     const [loading, setLoading] = useState(false)
 
-
     useEffect(() => {
         setLoading(true)
         const f = async () => {
@@ -94,9 +93,12 @@ const AuthProvider = ({ children }) => {
         setLoading(false)
     }
 
+    const loginOAuth = () => {
+        updateOauthStatus(window.gapi.auth2.getAuthInstance().isSignedIn.get())
+    }
+
     const login = (user, pass) => {
         setLoading(true)
-        updateOauthStatus(window.gapi.auth2.getAuthInstance().isSignedIn.get())
         // validate actual pwd
         // setCurrentUser(---user obj---)
         // TODO
@@ -105,8 +107,8 @@ const AuthProvider = ({ children }) => {
 
     const logout = () => {
         setLoading(true)
-        setCurrentUser(null)
         window.gapi.auth2.getAuthInstance().signOut()
+        setCurrentUser(null)
         setLoading(false)
     }
 
@@ -114,6 +116,7 @@ const AuthProvider = ({ children }) => {
         currentUser,
         gapiLoad,
         login,
+        loginOAuth,
         signup,
         logout
     }
