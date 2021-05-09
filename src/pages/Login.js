@@ -10,7 +10,7 @@ import { ReactComponent as RightArrow } from '../assets/ui-icons/right-arrow.svg
 import constants from '../constants'
 
 const PageIndicatorButton = (props) => {
-    return <IconButton aria-label="Toggle dark mode" enabled={false} onClick={props.onClick} sx={{ cursor: "pointer" }}>
+    return <IconButton enabled={false} onClick={props.onClick} sx={{ cursor: "pointer" }}>
         <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"

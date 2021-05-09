@@ -50,6 +50,7 @@ export default function Header() {
         <Box bg="background" sx={{ height: "80px", width: "100%", alignItems: "center" }} css={{ position: "sticky", top: "0", zIndex: "9999" }}>
             <Flex bg="background" sx={{
                 height: "100%",
+                width: ["80%"],
                 margin: "0 auto",
                 alignItems: "center",
                 justifyContent: "space-between",
