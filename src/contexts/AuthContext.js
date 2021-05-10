@@ -1,5 +1,6 @@
-import React, { useState, useContext, useEffect } from 'react'
+import React, { useState, useContext, useEffect } from 'react';
 import { favicon } from '../lib/misc';
+import * as bcrypt from 'bcryptjs';
 
 const AuthContext = React.createContext()
 
@@ -98,8 +99,83 @@ const AuthProvider = ({ children }) => {
 
     const login = (pass) => {
         setLoading(true)
-        // validate actual pwd
+
+        // Double check that OAuth is still valid?
+
+
+        // Password Validation
+
+        
+        // TODO: determine if new user by accessing manifest
+
+
+        let newUser = true;
+        var hash = '';
+
+        // Save user password hash if not enrolled
+
+        if (newUser) {
+
+            // Generate salt and hash
+            var salt = bcrypt.genSaltSync(10); // TODO: is random salt okay?
+            hash = bcrypt.hashSync(pass, salt);
+
+            // Testing
+            console.log("Password: " + pass);
+            console.log("Hash: " + hash);
+            console.log("Status: " + bcrypt.compareSync(pass, hash));
+
+            // Upload to Google Drive
+            // Store salt with hash?
+            const boundary='foo_bar_baz'
+            const delimiter = "\r\n--" + boundary + "\r\n";
+            const close_delim = "\r\n--" + boundary + "--";
+            var fileName='manifest.json'; 
+            var username = "hi";
+            var fileData='{ Username: "' + username + '", Hash: "' + hash + '", Salt: "' + salt + '" }';
+
+            // TODO: encrypt file data before uploading to drive
+
+            var contentType='application/json'
+            var metadata = {
+              'name': fileName,
+              'mimeType': contentType
+            };
+
+            var multipartRequestBody =
+              delimiter +
+              'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+              JSON.stringify(metadata) +
+              delimiter +
+              'Content-Type: ' + contentType + '\r\n\r\n' +
+              fileData+'\r\n'+
+              close_delim;
+
+          console.log(multipartRequestBody);
+          var request = window.gapi.client.request({
+            'path': 'https://www.googleapis.com/upload/drive/v3/files',
+            'method': 'POST',
+            'params': {'uploadType': 'multipart'},
+            'headers': {
+              'Content-Type': 'multipart/related; boundary=' + boundary + ''
+            },
+            'body': multipartRequestBody});
+            request.execute(function(file) {
+              console.log(file)
+            });
+
+            // TODO: Upload this data to user local cookies
+
+        } else {
+            // TODO: Get hashed password from user manifest
+
+
+            hash = 'hi';
+            bcrypt.compareSync(pass, hash);
+        }
+
         // setCurrentUser(---user obj---)
+
         // TODO
         setUnlockedFavicon()
         setLoading(false)
