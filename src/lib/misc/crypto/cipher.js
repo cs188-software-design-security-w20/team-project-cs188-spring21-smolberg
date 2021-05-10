@@ -31,7 +31,6 @@ const encryptAndUpload = (file, key, iv) => {
 
     reader.onloadend = () => {
         var encOut = aes.encrypt(reader.result, key, {iv: iv, mode: CryptoJS.mode.CTR});
-        fileNames.push(encryptedFileName);
         upload(encryptedFileName, encOut.ciphertext);
     }
 
