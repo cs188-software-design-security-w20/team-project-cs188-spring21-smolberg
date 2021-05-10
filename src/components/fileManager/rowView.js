@@ -29,8 +29,8 @@ const Cell = ({ file, last, selected, setSelected, setModal }) => {
 
     const copy256sum = async () => {
         navigator.clipboard.writeText(file.sum)
-        setSha256text("sha2356 copied to clipboard")
-        setTimeout(() => setSha256text("sha246"), 2 * 1000)
+        setSha256text("sha256 copied to clipboard")
+        setTimeout(() => setSha256text("sha256"), 2 * 1000)
     }
 
     const getLastModString = (d) => {
