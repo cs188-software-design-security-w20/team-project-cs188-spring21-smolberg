@@ -13,7 +13,7 @@ import * as forge from 'node-forge'
  * @param {uploadCallback} uploadCallback callback to upload
  * @param {string} key 32 bytes for the key
  * @param {string} iv 16 bytes for the IV 
- * @returns {[string, string, string]} the key, initialization vector, then encrypted file name in a list
+ * @returns {string, string, string} the key, initialization vector, then encrypted file name in a list
  */
 const encryptAndUpload = (file, uploadCallback, key = forge.random.getBytesSync(32), iv = forge.random.getBytesSync(16)) => {
 
@@ -25,13 +25,13 @@ const encryptAndUpload = (file, uploadCallback, key = forge.random.getBytesSync(
     reader.onloadend = () => {
         cipher.update(forge.util.createBuffer(forge.util.createBuffer(reader.result)));
         if(cipher.finish() == false) {
-            throw "Encryption Error"
+            throw "Encryption Error";
         }
         uploadCallback(encryptedFilename, cipher.output);
     }
 
     reader.readAsArrayBuffer(file);
-    return [key, iv, encryptedFilename];
+    return {key, iv, encryptedFilename};
 
 }
 /**
@@ -53,7 +53,7 @@ const decryptAndDownload = (encryptedBytes, key, downloadCallback, iv, filename)
     decipher.start({iv: iv});
     decipher.update(encryptedBytes);
     if(decipher.finish() == false) {
-        throw "Decryption Error"
+        throw "Decryption Error";
     }
     downloadCallback(filename, decipher.output);
 }
