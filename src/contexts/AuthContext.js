@@ -97,7 +97,7 @@ const AuthProvider = ({ children }) => {
         setCurrentOAuthUser(null)
     }
 
-    const login = (pass) => {
+    const login = async (pass) => {
         setLoading(true)
 
         // Double check that OAuth is still valid?
@@ -106,10 +106,18 @@ const AuthProvider = ({ children }) => {
         // Password Validation
 
         
-        // TODO: determine if new user by accessing manifest
-
-
-        let newUser = true;
+        // Determine if new user by accessing manifest
+        //var newUser = false;
+        var manifestRequest = window.gapi.client.request({
+            'path': 'https://www.googleapis.com/drive/v3/files',
+            'method': 'GET',
+            'params': {'q': "name = 'manifest1.json'"}});
+        manifestRequest.execute(async function(resp) {
+            console.log(resp);
+            let newUser = (resp.files.length === 0) // check if any files (this includes in trash)
+            //return newUs;
+            console.log(newUser)
+        //let newUser = true;
         var hash = '';
 
         // Save user password hash if not enrolled
@@ -130,7 +138,7 @@ const AuthProvider = ({ children }) => {
             const boundary='foo_bar_baz'
             const delimiter = "\r\n--" + boundary + "\r\n";
             const close_delim = "\r\n--" + boundary + "--";
-            var fileName='manifest.json'; 
+            var fileName='manifest1.json'; 
             var username = "hi";
             var fileData='{ Username: "' + username + '", Hash: "' + hash + '", Salt: "' + salt + '" }';
 
@@ -152,7 +160,7 @@ const AuthProvider = ({ children }) => {
               close_delim;
 
           console.log(multipartRequestBody);
-          var request = window.gapi.client.request({
+          var createRequest = window.gapi.client.request({
             'path': 'https://www.googleapis.com/upload/drive/v3/files',
             'method': 'POST',
             'params': {'uploadType': 'multipart'},
@@ -160,7 +168,8 @@ const AuthProvider = ({ children }) => {
               'Content-Type': 'multipart/related; boundary=' + boundary + ''
             },
             'body': multipartRequestBody});
-            request.execute(function(file) {
+          // can comment out the next part? remove console log??
+            createRequest.execute(function(file) {
               console.log(file)
             });
 
@@ -169,9 +178,40 @@ const AuthProvider = ({ children }) => {
         } else {
             // TODO: Get hashed password from user manifest
 
+            // How do we verify that we have the right file?? Security concern? (User could upload own file! But encryption...)
 
-            hash = 'hi';
-            bcrypt.compareSync(pass, hash);
+            // await window.gapi.client.drive.files.get({
+            //     'fileId': resp.files[0].id,
+            //     'alt': 'media'
+            // }, {
+            //     'responseType': 'arraybuffer',
+            // });
+
+            // TODO: MAKE THIS WORK 
+
+            var getRequest = window.gapi.client.request({
+            'path': 'https://www.googleapis.com/drive/v2/files/' + resp.files[0].id,
+            'method': 'GET'});
+          // can comment out the next part? remove console log??
+            getRequest.execute(function(file) {
+                console.log(file);
+                var accessToken = window.gapi.auth.getToken().access_token;
+                var xhr = new XMLHttpRequest();
+                //var file = resp.files[0];
+                xhr.open('GET', file.downloadUrl);
+                xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
+                xhr.onload = function() {
+                  console.log(xhr.responseText);
+                };
+                xhr.onerror = function() {
+                    console.log("NO");
+                  //callback(null);
+                };
+                xhr.send();
+
+                hash = 'hi';
+                bcrypt.compareSync(pass, hash);
+            });
         }
 
         // setCurrentUser(---user obj---)
@@ -179,6 +219,79 @@ const AuthProvider = ({ children }) => {
         // TODO
         setUnlockedFavicon()
         setLoading(false)
+        });
+        // console.log(newUser)
+        // //let newUser = true;
+        // var hash = '';
+
+        // // Save user password hash if not enrolled
+
+        // if (newUser) {
+
+        //     // Generate salt and hash
+        //     var salt = bcrypt.genSaltSync(10); // TODO: is random salt okay?
+        //     hash = bcrypt.hashSync(pass, salt);
+
+        //     // Testing
+        //     console.log("Password: " + pass);
+        //     console.log("Hash: " + hash);
+        //     console.log("Status: " + bcrypt.compareSync(pass, hash));
+
+        //     // Upload to Google Drive
+        //     // Store salt with hash?
+        //     const boundary='foo_bar_baz'
+        //     const delimiter = "\r\n--" + boundary + "\r\n";
+        //     const close_delim = "\r\n--" + boundary + "--";
+        //     var fileName='manifest.json'; 
+        //     var username = "hi";
+        //     var fileData='{ Username: "' + username + '", Hash: "' + hash + '", Salt: "' + salt + '" }';
+
+        //     // TODO: encrypt file data before uploading to drive
+
+        //     var contentType='application/json'
+        //     var metadata = {
+        //       'name': fileName,
+        //       'mimeType': contentType
+        //     };
+
+        //     var multipartRequestBody =
+        //       delimiter +
+        //       'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+        //       JSON.stringify(metadata) +
+        //       delimiter +
+        //       'Content-Type: ' + contentType + '\r\n\r\n' +
+        //       fileData+'\r\n'+
+        //       close_delim;
+
+        //   console.log(multipartRequestBody);
+        //   var request = window.gapi.client.request({
+        //     'path': 'https://www.googleapis.com/upload/drive/v3/files',
+        //     'method': 'POST',
+        //     'params': {'uploadType': 'multipart'},
+        //     'headers': {
+        //       'Content-Type': 'multipart/related; boundary=' + boundary + ''
+        //     },
+        //     'body': multipartRequestBody});
+        //   // can comment out the next part? remove console log??
+        //     request.execute(function(file) {
+        //       console.log(file)
+        //     });
+
+        //     // TODO: Upload this data to user local cookies
+
+        // } else {
+        //     // TODO: Get hashed password from user manifest
+
+
+        //     hash = 'hi';
+        //     bcrypt.compareSync(pass, hash);
+        // }
+
+        // // setCurrentUser(---user obj---)
+
+        // // TODO
+        // setUnlockedFavicon()
+        // setLoading(false)
     }
 
     const logout = async () => {
