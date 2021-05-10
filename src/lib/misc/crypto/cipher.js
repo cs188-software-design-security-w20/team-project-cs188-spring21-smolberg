@@ -1,54 +1,61 @@
-
-import aes from 'crypto-js/aes';
-import CryptoJS from 'crypto-js';
-
-
-
-/**
- * Encrypts File and Uploads it to Google Drive
- * @param {File|Blob} file the file to be encrypted and uploaded
- * @param {CryptoJS.lib.WordArray} key Key to be used
- * @param {CryptoJS.lib.WordArray} iv Initialization vector used
- * @returns {String} Name of encrypted file on gDrive
- */
-const encryptAndUpload = (file, key, iv) => {
-
-    var reader = new FileReader;
-    //might be used if we use progressive encryption, splitting files into chunks. 
-    //var aesEncryptor = CryptoJS.algo.AES.createEncryptor(key, { iv: iv, mode: CryptoJS.mode.CTR });
-    var encryptedFileName = randomString();
-
-
-    const upload = (filename, fileBuffer) => { return null }; //TODO: upload to gdrive, fileBuffer is a in a weird WordArray crypto-js comes with
-
-
-
-    const randomString = () => {
-        var buf = new Uint8Array(32);
-        window.crypto.getRandomValues(buf);
-        return Array.from(buf, (i) => i.toString(16).padStart(2, "0"))
-    }
-
-    reader.onloadend = () => {
-        var encOut = aes.encrypt(reader.result, key, {iv: iv, mode: CryptoJS.mode.CTR});
-        upload(encryptedFileName, encOut.ciphertext);
-    }
-
-    reader.readAsArrayBuffer(file);
-
-    return encryptedFileName;
-}
+import * as forge from 'node-forge'
 
 /**
  * 
- * @param {CryptoJS.lib.WordArray} encrypted Ciphertext to be decrypted
- * @param {CryptoJS.lib.WordArray} key Key to decrypt ciphertext with
- * @param {CryptoJS.lib.WordArray} iv Initialization vector
- * @returns {CryptoJS.lib.WordArray} Decrypted ciphertext
+ * @callback uploadCallback
+ * @param {string} encryptedFilename filename to be set on gdrive
+ * @param {forge.util.ByteBuffer} bytes encrypted bytes to upload
  */
-const decryptFile = (encrypted, key, iv) => {
 
-    var decOut = aes.decrypt(fileBuffer, key, {iv: iv});
+/**
+ * Encrypts and uploads
+ * @param {File| Blob} file File to encrypt and upload 
+ * @param {uploadCallback} uploadCallback callback to upload
+ * @param {string} key 32 bytes for the key
+ * @param {string} iv 16 bytes for the IV 
+ * @returns {[string, string, string]} the key, initialization vector, then encrypted file name in a list
+ */
+const encryptAndUpload = (file, uploadCallback, key = forge.random.getBytesSync(32), iv = forge.random.getBytesSync(16)) => {
 
-    return decOut; //array of decrypted ciphertext
+    var cipher = forge.cipher.createCipher('AES-CTR', key);
+    var encryptedFilename = forge.util.binary.hex.encode(forge.random.getBytesSync(32)).toString();
+    cipher.start({iv: iv});
+    var reader = new FileReader;
+
+    reader.onloadend = () => {
+        cipher.update(forge.util.createBuffer(forge.util.createBuffer(reader.result)));
+        if(cipher.finish() == false) {
+            throw "Encryption Error"
+        }
+        uploadCallback(encryptedFilename, cipher.output);
+    }
+
+    reader.readAsArrayBuffer(file);
+    return [key, iv, encryptedFilename];
+
 }
+/**
+ * @callback downloadCallback
+ * @param filename name of the file to download
+ * @param {forge.util.ByteBuffer} result plaintext bytes for the file
+ */
+
+/**
+ * Decrypts and then downloads
+ * @param {forge.util.ByteBuffer} encryptedBytes 
+ * @param {string} key 
+ * @param {downloadCallback} downloadCallback 
+ * @param {string} iv 
+ * @param {string} filename 
+ */
+const decryptAndDownload = (encryptedBytes, key, downloadCallback, iv, filename) => {
+    var decipher = forge.cipher.createDecipher('AES-CTR', key);
+    decipher.start({iv: iv});
+    decipher.update(encryptedBytes);
+    if(decipher.finish() == false) {
+        throw "Decryption Error"
+    }
+    downloadCallback(filename, decipher.output);
+}
+
+export {encryptAndUpload, decryptAndDownload}
