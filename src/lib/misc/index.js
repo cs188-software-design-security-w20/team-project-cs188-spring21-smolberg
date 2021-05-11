@@ -1,3 +1,4 @@
-import * as favicon from './favicon'
+import * as favicon from "./favicon";
 
-export { favicon }
+// eslint-disable-next-line import/prefer-default-export
+export { favicon };

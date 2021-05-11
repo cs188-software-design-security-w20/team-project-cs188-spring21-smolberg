@@ -1,5 +1,5 @@
 const constants = {
-    APP_NAME: "Smolberg"
-}
+  APP_NAME: "Smolberg",
+};
 
-export default constants
+export default constants;
