@@ -1,5 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react'
 import { favicon } from '../lib/misc';
+import * as FileSaver from 'file-saver';
+import fs from 'fs';
 
 const AuthContext = React.createContext()
 
@@ -113,6 +115,32 @@ const AuthProvider = ({ children }) => {
         setLoading(false)
     }
 
+    const getData = async (fileId) => {
+        const file = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+            method: 'GET',
+            headers: new Headers({ 'Authorization': 'Bearer ' + window.gapi.auth.getToken().access_token }),
+        })
+        return await file.arrayBuffer()
+    }
+
+    const download = async (fileId) => {
+        setLoading(true)
+        let filename = "file"
+        let filetype = "txt"
+        let request = window.gapi.client.drive.files.get({
+            'fileId': fileId,
+        });
+        request.execute(function(file) {
+            if (file.name) filename = file.name;
+            if (file.mimeType) filetype = file.mimeType;
+        });
+        let data = await getData(fileId);
+        const blob = new Blob([data], {type: filetype});
+        FileSaver.saveAs(blob, filename);
+
+        setLoading(false) 
+    }
+
     const authTools = {
         currentUser,
         currentOAuthUser,
@@ -121,7 +149,8 @@ const AuthProvider = ({ children }) => {
         loginOAuth,
         signup,
         OAuthLogOut,
-        logout
+        logout,
+        download
     }
 
     return (
