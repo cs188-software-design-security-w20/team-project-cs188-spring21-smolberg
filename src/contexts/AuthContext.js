@@ -1,7 +1,6 @@
 import React, { useState, useContext, useEffect } from 'react'
 import { favicon } from '../lib/misc';
 import * as FileSaver from 'file-saver';
-import fs from 'fs';
 
 const AuthContext = React.createContext()
 
