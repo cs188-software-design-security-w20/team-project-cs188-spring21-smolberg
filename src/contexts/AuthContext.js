@@ -17,14 +17,14 @@ const SCOPES = 'https://www.googleapis.com/auth/drive';
  *  
  */
 
-const useAuth = () => {
-    return useContext(AuthContext)
-}
+ const useAuth = () => {
+     return useContext(AuthContext)
+ }
 
-const AuthProvider = ({ children }) => {
+ const AuthProvider = ({ children }) => {
 
-    const [currentOAuthUser, setCurrentOAuthUser] = useState(null)
-    const [currentUser, setCurrentUser] = useState(null)
+     const [currentOAuthUser, setCurrentOAuthUser] = useState(null)
+     const [currentUser, setCurrentUser] = useState(null)
     // Don't render anything before auth status has been realized
     const [loading, setLoading] = useState(false)
 
@@ -105,193 +105,113 @@ const AuthProvider = ({ children }) => {
 
         // Password Validation
 
+        // TODO: add failure handling!
         
-        // Determine if new user by accessing manifest
-        //var newUser = false;
+        // Determine if new user by accessing manifest (this also checks the trash)
         var manifestRequest = window.gapi.client.request({
             'path': 'https://www.googleapis.com/drive/v3/files',
             'method': 'GET',
             'params': {'q': "name = 'manifest1.json'"}});
+
         manifestRequest.execute(async function(resp) {
             console.log(resp);
-            let newUser = (resp.files.length === 0) // check if any files (this includes in trash)
-            //return newUs;
-            console.log(newUser)
-        //let newUser = true;
-        var hash = '';
 
-        // Save user password hash if not enrolled
+            // Check if manifest exists
+            let newUser = (resp.files.length === 0)
+            var hash = '';
 
-        if (newUser) {
+            // Save user password hash if not enrolled
+            if (newUser) {
 
-            // Generate salt and hash
-            var salt = bcrypt.genSaltSync(10); // TODO: is random salt okay?
-            hash = bcrypt.hashSync(pass, salt);
+                // Generate salt and hash
+                var salt = bcrypt.genSaltSync(10); // TODO: is random salt okay?
+                hash = bcrypt.hashSync(pass, salt);
 
-            // Testing
-            console.log("Password: " + pass);
-            console.log("Hash: " + hash);
-            console.log("Status: " + bcrypt.compareSync(pass, hash));
+                // Testing
+                
+                // console.log("Password: " + pass);
+                // console.log("Hash: " + hash);
+                // console.log("Status: " + bcrypt.compareSync(pass, hash));
 
-            // Upload to Google Drive
-            // Store salt with hash?
-            const boundary='foo_bar_baz'
-            const delimiter = "\r\n--" + boundary + "\r\n";
-            const close_delim = "\r\n--" + boundary + "--";
-            var fileName='manifest1.json'; 
-            var username = "hi";
-            var fileData='{ Username: "' + username + '", Hash: "' + hash + '", Salt: "' + salt + '" }';
 
-            // TODO: encrypt file data before uploading to drive
+                // Unencrypted json data
+                var username = "hi"; // TODO: replace with user google account
+                var jsonData = {
+                    'username': username,
+                    'hash': hash,
+                    'salt': salt // Needed?
+                };
 
-            var contentType='application/json'
-            var metadata = {
-              'name': fileName,
-              'mimeType': contentType
-            };
+                var fileData= JSON.stringify(jsonData,0);
 
-            var multipartRequestBody =
-              delimiter +
-              'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-              JSON.stringify(metadata) +
-              delimiter +
-              'Content-Type: ' + contentType + '\r\n\r\n' +
-              fileData+'\r\n'+
-              close_delim;
+                // Upload to Google Drive
 
-          console.log(multipartRequestBody);
-          var createRequest = window.gapi.client.request({
-            'path': 'https://www.googleapis.com/upload/drive/v3/files',
-            'method': 'POST',
-            'params': {'uploadType': 'multipart'},
-            'headers': {
-              'Content-Type': 'multipart/related; boundary=' + boundary + ''
-            },
-            'body': multipartRequestBody});
-          // can comment out the next part? remove console log??
-            createRequest.execute(function(file) {
-              console.log(file)
-            });
+                const boundary='foo_bar_baz'
+                const delimiter = "\r\n--" + boundary + "\r\n";
+                const close_delim = "\r\n--" + boundary + "--";
+                var fileName='manifest1.json'; 
+
+                // TODO: encrypt file data before uploading to drive
+
+                var contentType='application/json'
+                var metadata = {
+                    'name': fileName,
+                    'mimeType': contentType
+                };
+
+                var multipartRequestBody =
+                delimiter +
+                'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+                JSON.stringify(metadata) +
+                delimiter +
+                'Content-Type: ' + contentType + '\r\n\r\n' +
+                fileData+'\r\n'+
+                close_delim;
+
+                // console.log(multipartRequestBody);
+                var createRequest = window.gapi.client.request({
+                    'path': 'https://www.googleapis.com/upload/drive/v3/files',
+                    'method': 'POST',
+                    'params': {'uploadType': 'multipart'},
+                    'headers': {
+                        'Content-Type': 'multipart/related; boundary=' + boundary + ''
+                    },
+                    'body': multipartRequestBody});
+                 
+                  createRequest.execute(function(file) {
+                      console.log(file); // can comment out
+                  });
 
             // TODO: Upload this data to user local cookies
 
-        } else {
-            // TODO: Get hashed password from user manifest
+            } else {
+                // Get hashed password from user manifest
 
-            // How do we verify that we have the right file?? Security concern? (User could upload own file! But encryption...)
+                // TODO: Check cookies first
 
-            // await window.gapi.client.drive.files.get({
-            //     'fileId': resp.files[0].id,
-            //     'alt': 'media'
-            // }, {
-            //     'responseType': 'arraybuffer',
-            // });
+                // Through drive
 
-            // TODO: MAKE THIS WORK 
+                // How do we verify that we have the right file?? Security concern? (User could upload own file! But encryption...)
 
-            var getRequest = window.gapi.client.request({
-            'path': 'https://www.googleapis.com/drive/v2/files/' + resp.files[0].id,
-            'method': 'GET'});
-          // can comment out the next part? remove console log??
-            getRequest.execute(function(file) {
-                console.log(file);
-                var accessToken = window.gapi.auth.getToken().access_token;
-                var xhr = new XMLHttpRequest();
-                //var file = resp.files[0];
-                xhr.open('GET', file.downloadUrl);
-                xhr.setRequestHeader('Authorization', 'Bearer ' + accessToken);
-                xhr.onload = function() {
-                  console.log(xhr.responseText);
-                };
-                xhr.onerror = function() {
-                    console.log("NO");
-                  //callback(null);
-                };
-                xhr.send();
+                let r = await fetch(`https://www.googleapis.com/drive/v3/files/${resp.files[0].id}?alt=media`, {
+                            method: 'GET',
+                            headers: new Headers({ 'Authorization': 'Bearer ' + window.gapi.auth.getToken().access_token }),
+                 })
 
-                hash = 'hi';
-                bcrypt.compareSync(pass, hash);
-            });
-        }
+                r = await r.arrayBuffer();
 
-        // setCurrentUser(---user obj---)
+                // Add decryption before this step
+                let jsonResp = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(r)));
+                console.log(jsonResp);
+                console.log(bcrypt.compareSync(pass, jsonResp.hash));
+                // TODO: Authentication based on bcrypt response
+            }
 
-        // TODO
-        setUnlockedFavicon()
-        setLoading(false)
+            // setCurrentUser(---user obj---)
+
+            setUnlockedFavicon()
+            setLoading(false)
         });
-        // console.log(newUser)
-        // //let newUser = true;
-        // var hash = '';
-
-        // // Save user password hash if not enrolled
-
-        // if (newUser) {
-
-        //     // Generate salt and hash
-        //     var salt = bcrypt.genSaltSync(10); // TODO: is random salt okay?
-        //     hash = bcrypt.hashSync(pass, salt);
-
-        //     // Testing
-        //     console.log("Password: " + pass);
-        //     console.log("Hash: " + hash);
-        //     console.log("Status: " + bcrypt.compareSync(pass, hash));
-
-        //     // Upload to Google Drive
-        //     // Store salt with hash?
-        //     const boundary='foo_bar_baz'
-        //     const delimiter = "\r\n--" + boundary + "\r\n";
-        //     const close_delim = "\r\n--" + boundary + "--";
-        //     var fileName='manifest.json'; 
-        //     var username = "hi";
-        //     var fileData='{ Username: "' + username + '", Hash: "' + hash + '", Salt: "' + salt + '" }';
-
-        //     // TODO: encrypt file data before uploading to drive
-
-        //     var contentType='application/json'
-        //     var metadata = {
-        //       'name': fileName,
-        //       'mimeType': contentType
-        //     };
-
-        //     var multipartRequestBody =
-        //       delimiter +
-        //       'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-        //       JSON.stringify(metadata) +
-        //       delimiter +
-        //       'Content-Type: ' + contentType + '\r\n\r\n' +
-        //       fileData+'\r\n'+
-        //       close_delim;
-
-        //   console.log(multipartRequestBody);
-        //   var request = window.gapi.client.request({
-        //     'path': 'https://www.googleapis.com/upload/drive/v3/files',
-        //     'method': 'POST',
-        //     'params': {'uploadType': 'multipart'},
-        //     'headers': {
-        //       'Content-Type': 'multipart/related; boundary=' + boundary + ''
-        //     },
-        //     'body': multipartRequestBody});
-        //   // can comment out the next part? remove console log??
-        //     request.execute(function(file) {
-        //       console.log(file)
-        //     });
-
-        //     // TODO: Upload this data to user local cookies
-
-        // } else {
-        //     // TODO: Get hashed password from user manifest
-
-
-        //     hash = 'hi';
-        //     bcrypt.compareSync(pass, hash);
-        // }
-
-        // // setCurrentUser(---user obj---)
-
-        // // TODO
-        // setUnlockedFavicon()
-        // setLoading(false)
     }
 
     const logout = async () => {
@@ -315,9 +235,9 @@ const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={authTools}>
-            {!loading && children}
+        {!loading && children}
         </AuthContext.Provider>
-    )
-}
+        )
+    }
 
-export { AuthProvider, useAuth }
+    export { AuthProvider, useAuth }
