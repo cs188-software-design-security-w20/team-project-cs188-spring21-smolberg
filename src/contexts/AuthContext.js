@@ -23,7 +23,7 @@ const useAuth = () => {
 const AuthProvider = ({ children }) => {
 
     const [currentOAuthUser, setCurrentOAuthUser] = useState(null)
-    const [currentUser, setCurrentUser] = useState(null)
+    const [currentUser, setCurrentUser] = useState("smth")
     // Don't render anything before auth status has been realized
     const [loading, setLoading] = useState(false)
 
