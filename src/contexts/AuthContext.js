@@ -1,5 +1,7 @@
-import React, { useState, useContext, useEffect } from 'react'
+import React, { useState, useContext, useEffect } from 'react';
 import { favicon } from '../lib/misc';
+import * as bcrypt from 'bcryptjs';
+import { useHistory } from 'react-router-dom';
 
 const AuthContext = React.createContext()
 
@@ -16,14 +18,14 @@ const SCOPES = 'https://www.googleapis.com/auth/drive';
  *  
  */
 
-const useAuth = () => {
-    return useContext(AuthContext)
-}
+ const useAuth = () => {
+     return useContext(AuthContext)
+ }
 
-const AuthProvider = ({ children }) => {
-
-    const [currentOAuthUser, setCurrentOAuthUser] = useState(null)
-    const [currentUser, setCurrentUser] = useState(null)
+ const AuthProvider = ({ children }) => {
+     const history = useHistory()
+     const [currentOAuthUser, setCurrentOAuthUser] = useState(null)
+     const [currentUser, setCurrentUser] = useState(null)
     // Don't render anything before auth status has been realized
     const [loading, setLoading] = useState(false)
 
@@ -96,13 +98,130 @@ const AuthProvider = ({ children }) => {
         setCurrentOAuthUser(null)
     }
 
-    const login = (pass) => {
+    const login = async (pass) => {
         setLoading(true)
-        // validate actual pwd
-        // setCurrentUser(---user obj---)
-        // TODO
-        setUnlockedFavicon()
-        setLoading(false)
+
+        // Double check that OAuth is still valid?
+
+
+        // Password Validation
+
+        // TODO: add failure handling!
+        
+        // Determine if new user by accessing manifest (this also checks the trash)
+        var manifestRequest = window.gapi.client.request({
+            'path': 'https://www.googleapis.com/drive/v3/files',
+            'method': 'GET',
+            'params': {'q': "name = 'manifest1.json'"}});
+
+        manifestRequest.execute(async function(resp) {
+            console.log(resp);
+
+            // Check if manifest exists
+            let newUser = (resp.files.length === 0)
+            var hash = '';
+
+            // Save user password hash if not enrolled
+            if (newUser) {
+
+                // Generate salt and hash
+                var salt = bcrypt.genSaltSync(10); // TODO: is random salt okay?
+                hash = bcrypt.hashSync(pass, salt);
+
+                // Testing
+                
+                // console.log("Password: " + pass);
+                // console.log("Hash: " + hash);
+                // console.log("Status: " + bcrypt.compareSync(pass, hash));
+
+
+                // Unencrypted json data
+                var username = "hi"; // TODO: replace with user google account
+                var jsonData = {
+                    'username': username,
+                    'hash': hash,
+                    'salt': salt // Needed?
+                };
+
+                var fileData= JSON.stringify(jsonData,0);
+
+                // Upload to Google Drive
+
+                const boundary='foo_bar_baz'
+                const delimiter = "\r\n--" + boundary + "\r\n";
+                const close_delim = "\r\n--" + boundary + "--";
+                var fileName='manifest1.json'; 
+
+                // TODO: encrypt file data before uploading to drive
+
+                var contentType='application/json'
+                var metadata = {
+                    'name': fileName,
+                    'mimeType': contentType
+                };
+
+                var multipartRequestBody =
+                delimiter +
+                'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+                JSON.stringify(metadata) +
+                delimiter +
+                'Content-Type: ' + contentType + '\r\n\r\n' +
+                fileData+'\r\n'+
+                close_delim;
+
+                // console.log(multipartRequestBody);
+                var createRequest = window.gapi.client.request({
+                    'path': 'https://www.googleapis.com/upload/drive/v3/files',
+                    'method': 'POST',
+                    'params': {'uploadType': 'multipart'},
+                    'headers': {
+                        'Content-Type': 'multipart/related; boundary=' + boundary + ''
+                    },
+                    'body': multipartRequestBody});
+                 
+                  createRequest.execute(function(file) {
+                      console.log(file); // can comment out
+                  });
+
+            // TODO: Upload this data to user local cookies
+
+                setCurrentUser(hash);
+                history.push('/files');
+                setUnlockedFavicon();
+
+            } else {
+                // Get hashed password from user manifest
+
+                // TODO: Check cookies first
+
+                // Through drive
+
+                // How do we verify that we have the right file?? Security concern? (User could upload own file! But encryption...)
+
+                let r = await fetch(`https://www.googleapis.com/drive/v3/files/${resp.files[0].id}?alt=media`, {
+                            method: 'GET',
+                            headers: new Headers({ 'Authorization': 'Bearer ' + window.gapi.auth.getToken().access_token }),
+                 })
+
+                r = await r.arrayBuffer();
+
+                // Add decryption before this step
+                let jsonResp = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(r)));
+
+                // console.log(jsonResp);
+                console.log(bcrypt.compareSync(pass, jsonResp.hash));
+
+                if (bcrypt.compareSync(pass, jsonResp.hash)) {
+                    setCurrentUser(jsonResp.hash);
+                    history.push('/files');
+                    setUnlockedFavicon();
+                } else {
+                    setCurrentUser(null);
+                }
+                // TODO: Authentication based on bcrypt response
+            }
+            setLoading(false)
+        });
     }
 
     const logout = async () => {
@@ -126,9 +245,9 @@ const AuthProvider = ({ children }) => {
 
     return (
         <AuthContext.Provider value={authTools}>
-            {!loading && children}
+        {!loading && children}
         </AuthContext.Provider>
-    )
-}
+        )
+    }
 
-export { AuthProvider, useAuth }
+    export { AuthProvider, useAuth }
