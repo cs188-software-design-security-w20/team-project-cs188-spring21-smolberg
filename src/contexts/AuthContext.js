@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { favicon } from '../lib/misc';
 import * as bcrypt from 'bcryptjs';
+import { useHistory } from 'react-router-dom';
 
 const AuthContext = React.createContext()
 
@@ -22,7 +23,7 @@ const SCOPES = 'https://www.googleapis.com/auth/drive';
  }
 
  const AuthProvider = ({ children }) => {
-
+     const history = useHistory()
      const [currentOAuthUser, setCurrentOAuthUser] = useState(null)
      const [currentUser, setCurrentUser] = useState(null)
     // Don't render anything before auth status has been realized
@@ -184,6 +185,10 @@ const SCOPES = 'https://www.googleapis.com/auth/drive';
 
             // TODO: Upload this data to user local cookies
 
+                setCurrentUser(hash);
+                history.push('/files');
+                setUnlockedFavicon();
+
             } else {
                 // Get hashed password from user manifest
 
@@ -202,14 +207,19 @@ const SCOPES = 'https://www.googleapis.com/auth/drive';
 
                 // Add decryption before this step
                 let jsonResp = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(r)));
-                console.log(jsonResp);
+
+                // console.log(jsonResp);
                 console.log(bcrypt.compareSync(pass, jsonResp.hash));
+
+                if (bcrypt.compareSync(pass, jsonResp.hash)) {
+                    setCurrentUser(jsonResp.hash);
+                    history.push('/files');
+                    setUnlockedFavicon();
+                } else {
+                    setCurrentUser(null);
+                }
                 // TODO: Authentication based on bcrypt response
             }
-
-            // setCurrentUser(---user obj---)
-
-            setUnlockedFavicon()
             setLoading(false)
         });
     }
