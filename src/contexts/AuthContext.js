@@ -2,6 +2,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { favicon } from '../lib/misc';
 import * as bcrypt from 'bcryptjs';
 import { useHistory } from 'react-router-dom';
+import * as FileSaver from 'file-saver';
 
 const AuthContext = React.createContext()
 
@@ -196,14 +197,8 @@ const SCOPES = 'https://www.googleapis.com/auth/drive';
 
                 // Through drive
 
-                // How do we verify that we have the right file?? Security concern? (User could upload own file! But encryption...)
-
-                let r = await fetch(`https://www.googleapis.com/drive/v3/files/${resp.files[0].id}?alt=media`, {
-                            method: 'GET',
-                            headers: new Headers({ 'Authorization': 'Bearer ' + window.gapi.auth.getToken().access_token }),
-                 })
-
-                r = await r.arrayBuffer();
+                // How do we verify that we have the right file?? Security concern? (User could upload own file! But encryption...
+                let r = await getData(resp.files[0].id)
 
                 // Add decryption before this step
                 let jsonResp = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(r)));
@@ -232,6 +227,34 @@ const SCOPES = 'https://www.googleapis.com/auth/drive';
         setLoading(false)
     }
 
+    // helper function to get data
+    const getData = async (fileId) => {
+        const file = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+            method: 'GET',
+            headers: new Headers({ 'Authorization': 'Bearer ' + window.gapi.auth.getToken().access_token }),
+        })
+        return await file.arrayBuffer()
+    }
+
+    // download file to local device
+    const download = async (fileId) => {
+        setLoading(true)
+        let filename = "file"
+        let filetype = "txt"    // temporary filetype
+        let request = window.gapi.client.drive.files.get({
+            'fileId': fileId,
+        });
+        request.execute(function(file) {
+            if (file.name) filename = file.name;
+            if (file.mimeType) filetype = file.mimeType;
+        });
+        let data = await getData(fileId);
+        const blob = new Blob([data], {type: filetype});
+        FileSaver.saveAs(blob, filename);
+
+        setLoading(false) 
+    }
+
     const authTools = {
         currentUser,
         currentOAuthUser,
@@ -240,7 +263,8 @@ const SCOPES = 'https://www.googleapis.com/auth/drive';
         loginOAuth,
         signup,
         OAuthLogOut,
-        logout
+        logout,
+        download
     }
 
     return (
