@@ -1,3 +1,4 @@
-import * as cipher from './cipher'
+import * as cipher from "./cipher";
 
-export { cipher }
+// eslint-disable-next-line import/prefer-default-export
+export { cipher };
