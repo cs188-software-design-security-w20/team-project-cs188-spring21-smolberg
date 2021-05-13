@@ -37,6 +37,21 @@ const encryptFile = (
 
     reader.readAsArrayBuffer(file);
   });
+/**
+ * Decrypts
+ * @param {ArrayBuffer} encryptedBytes
+ * @param {string} key
+ * @param {string} iv
+ */
+const decrypt = (encryptedBytes, key, iv) => {
+  const decipher = forge.cipher.createDecipher(AES_MODE, key);
+  decipher.start({ iv });
+  decipher.update(forge.util.createBuffer(encryptedBytes, "raw"));
+  if (decipher.finish() === false) {
+    throw Error("Decryption Error");
+  }
+  return decipher.output.getBytes();
+};
 
 /**
  * Decrypts and then downloads
@@ -46,21 +61,14 @@ const encryptFile = (
  * @param {string} iv
  */
 const decryptAndDownloadFile = (encryptedBytes, filename, key, iv) => {
-  const decipher = forge.cipher.createDecipher(AES_MODE, key);
-  decipher.start({ iv });
-  decipher.update(forge.util.createBuffer(encryptedBytes, "raw"));
-  if (decipher.finish() === false) {
-    throw Error("Decryption Error");
-  }
+  const decrypted = decrypt(encryptedBytes, key, iv);
   const link = document.createElement("a");
   link.setAttribute("download", filename);
-  const blob = new Blob([
-    forge.util.binary.raw.decode(decipher.output.getBytes()),
-  ]);
+  const blob = new Blob([forge.util.binary.raw.decode(decrypted)]);
   link.href = window.URL.createObjectURL(blob);
   document.body.appendChild(link);
   link.click();
   link.remove();
 };
 
-export { encryptFile, decryptAndDownloadFile };
+export { encryptFile, decryptAndDownloadFile, decrypt };

@@ -1,26 +1,41 @@
-/* eslint-disable */
+import { cipher } from "../crypto";
 
-const UserManifest = () => {
-  this.version = 0.1; // guess we are doing versioning here
-  this.fileManifestName = null;
-  this.fileManifestIV = null;
-  this.fileManifestKey = null;
+class UserManifest {
+  constructor(name, key, iv) {
+    this.state = {
+      version: 0.1,
+      fileManifest: { name, key, iv },
+    };
+  }
 
-  const setFileManifest = (
-    fileManifestName,
-    fileManifestIV,
-    fileManifestKey
-  ) => {
-    this.fileManifestName = fileManifestName;
-    this.fileManifestIV = fileManifestIV;
-    this.fileManifestKey = fileManifestKey;
-  };
+  stringify() {
+    return JSON.stringify(this.state);
+  }
 
-  const stringify = JSON.stringify(this);
-  const parse = (manifest) => {
+  static parse(manifest) {
     return JSON.parse(manifest);
-  };
-  //we might want to prototype in upload and download functions for this
-};
+  }
 
+  encrypt(key, iv) {
+    return cipher.encryptFile(
+      new Blob([this.stringify()], { type: "application/json" }),
+      key,
+      iv
+    );
+  }
+
+  static decrypt(encryptedManifest, key, iv) {
+    const decrypted = cipher.decrypt(encryptedManifest, key, iv).toString();
+    const parsed = JSON.parse(decrypted);
+    return new UserManifest(
+      parsed.state.fileManifest.name,
+      parsed.state.fileManifest.key,
+      parsed.state.fileManifest.iv
+    );
+  }
+
+  // we might want to prototype in upload and download functions for this.state
+}
+
+// eslint-disable-next-line import/prefer-default-export
 export { UserManifest };
