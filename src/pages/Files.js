@@ -1,26 +1,37 @@
 /** @jsxImportSource theme-ui */
-
+import React from 'react'
 import { Flex } from '@theme-ui/components'
-import React, { useEffect } from 'react'
 import Container from '../components/Container'
 import FileManager from '../components/fileManager'
-import constants from '../constants'
+import {getAllFileData, formatFiles} from '../lib/gdrivefs/files.js' 
 
-import sampleFiles from '../components/fileManager/sampleFiles'
+class Files extends React.Component {
+    constructor(props) {
+        super(props)
+        this.state = { files: [] }
+    }
 
-const Files = () => {
+    componentDidMount(){
+        this.handleInit()
+    }
 
-    useEffect(() => {
-        document.title = `${constants.APP_NAME} | Files`
-    }, [])
+    handleInit = async () => {
+        const r = await formatFiles(
+            await getAllFileData())
+            // fakeGDrive) *** KEEP HERE FOR DEBUG
+        this.setState({files: r})
+    }
 
-    return (
-        <Container>
-            <Flex mt={2} sx={{ width: "100%", justifyContent: "center" }}>
-                <FileManager files={sampleFiles} currentPath="/users/testuser" />
-            </Flex>
-        </Container>
-    )
-}
+    render () {
+        const {files} = this.state;
+        return <div>
+            <Container>
+                <Flex mt={2} sx={{ width: "100%", justifyContent: "center" }}>
+                    <FileManager files={files}/>
+                </Flex>
+            </Container>
+        </div>
+    }
+  }
 
 export default Files
