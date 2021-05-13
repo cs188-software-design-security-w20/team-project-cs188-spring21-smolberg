@@ -33,4 +33,55 @@ const formatFiles = async (files) => {
   return f;
 };
 
-export { fakeGDrive, formatFiles, getAllFileData };
+/**
+ * Uploads a Blob object to google drive with the given name
+ *
+ * TODO: Accept directory to place file in
+ *
+ * @param {string} name
+ * @param {Blob} file
+ * @returns Promise from fetch API call
+ */
+const uploadFile = async (name, file) => {
+  const form = new FormData();
+  const metadata = {
+    name, // Filename at Google Drive
+    mimeType: "octet/stream", // mimeType at Google Drive
+  };
+  form.append(
+    "metadata",
+    new Blob([JSON.stringify(metadata)], { type: "application/json" })
+  );
+  form.append("file", file);
+
+  return fetch(
+    "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id",
+    {
+      method: "POST",
+      headers: new Headers({
+        Authorization: `Bearer ${window.gapi.auth.getToken().access_token}`,
+      }),
+      body: form,
+    }
+  );
+};
+
+/**
+ * Downloads a file from google drive, given the file ID.
+ * This function will NOT convert the response to blob or string format.
+ * It is the callers job to take the response and convert it into a different format.
+ * For example: pulling the arraybuffer so that the file may be decrypted
+ * like `await res.arrayBuffer()`
+ *
+ * @param {string} fileId
+ * @returns Promise from fetch API call
+ */
+const downloadFile = async (fileId) =>
+  fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+    method: "GET",
+    headers: new Headers({
+      Authorization: `Bearer ${window.gapi.auth.getToken().access_token}`,
+    }),
+  });
+
+export { fakeGDrive, formatFiles, getAllFileData, uploadFile, downloadFile };
