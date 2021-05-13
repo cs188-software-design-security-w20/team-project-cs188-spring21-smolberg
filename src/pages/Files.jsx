@@ -36,7 +36,7 @@ const Files = () => {
   return (
     <Container>
       <Flex mt={2} mb={7} sx={{ width: "100%", justifyContent: "center" }}>
-        <FileManager files={files} currentPath="/users/testuser" />
+        <FileManager files={files} currentPath="/" />
       </Flex>
     </Container>
   );
