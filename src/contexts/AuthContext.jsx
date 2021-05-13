@@ -1,3 +1,5 @@
+/* eslint-disable */
+
 import React, { useState, useContext, useEffect } from "react";
 import PropTypes from "prop-types";
 import { favicon } from "../lib/misc";
@@ -115,124 +117,126 @@ const AuthProvider = ({ children }) => {
   // TODO: Remove this eslint disable
   // eslint-disable-next-line no-unused-vars
   const login = (pass) => {
+    let manifestRequest = "";
     setLoading(true);
-    setLoading(true)
+    setLoading(true);
 
-        // Double check that OAuth is still valid?
+    // Double check that OAuth is still valid?
 
+    // Password Validation
 
-        // Password Validation
+    // TODO: add failure handling!
 
-        // TODO: add failure handling!
-        
-        // Determine if new user by accessing manifest (this also checks the trash)
-        var manifestRequest = window.gapi.client.request({
-            'path': 'https://www.googleapis.com/drive/v3/files',
-            'method': 'GET',
-            'params': {'q': "name = 'manifest1.json'"}});
+    // Determine if new user by accessing manifest (this also checks the trash)
+    manifestRequest = window.gapi.client.request({
+      path: "https://www.googleapis.com/drive/v3/files",
+      method: "GET",
+      params: { q: "name = 'manifest1.json'" },
+    });
 
-        manifestRequest.execute(async function(resp) {
-            console.log(resp);
+    manifestRequest.execute(async (resp) => {
+      // Check if manifest exists
+      let newUser = resp.files.length === 0;
+      var hash = "";
 
-            // Check if manifest exists
-            let newUser = (resp.files.length === 0)
-            var hash = '';
+      // Save user password hash if not enrolled
+      if (newUser) {
+        // Generate salt and hash
+        var salt = bcrypt.genSaltSync(10); // TODO: is random salt okay?
+        hash = bcrypt.hashSync(pass, salt);
 
-            // Save user password hash if not enrolled
-            if (newUser) {
+        // Testing
 
-                // Generate salt and hash
-                var salt = bcrypt.genSaltSync(10); // TODO: is random salt okay?
-                hash = bcrypt.hashSync(pass, salt);
+        // console.log("Password: " + pass);
+        // console.log("Hash: " + hash);
+        // console.log("Status: " + bcrypt.compareSync(pass, hash));
 
-                // Testing
-                
-                // console.log("Password: " + pass);
-                // console.log("Hash: " + hash);
-                // console.log("Status: " + bcrypt.compareSync(pass, hash));
+        // Unencrypted json data
+        var username = "hi"; // TODO: replace with user google account
+        var jsonData = {
+          username: username,
+          hash: hash,
+          salt: salt, // Needed?
+        };
 
+        var fileData = JSON.stringify(jsonData, 0);
 
-                // Unencrypted json data
-                var username = "hi"; // TODO: replace with user google account
-                var jsonData = {
-                    'username': username,
-                    'hash': hash,
-                    'salt': salt // Needed?
-                };
+        // Upload to Google Drive
 
-                var fileData= JSON.stringify(jsonData,0);
+        const boundary = "foo_bar_baz";
+        const delimiter = "\r\n--" + boundary + "\r\n";
+        const close_delim = "\r\n--" + boundary + "--";
+        var fileName = "manifest1.json";
 
-                // Upload to Google Drive
+        // TODO: encrypt file data before uploading to drive
 
-                const boundary='foo_bar_baz'
-                const delimiter = "\r\n--" + boundary + "\r\n";
-                const close_delim = "\r\n--" + boundary + "--";
-                var fileName='manifest1.json'; 
+        var contentType = "application/json";
+        var metadata = {
+          name: fileName,
+          mimeType: contentType,
+        };
 
-                // TODO: encrypt file data before uploading to drive
+        var multipartRequestBody =
+          delimiter +
+          "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
+          JSON.stringify(metadata) +
+          delimiter +
+          "Content-Type: " +
+          contentType +
+          "\r\n\r\n" +
+          fileData +
+          "\r\n" +
+          close_delim;
 
-                var contentType='application/json'
-                var metadata = {
-                    'name': fileName,
-                    'mimeType': contentType
-                };
-
-                var multipartRequestBody =
-                delimiter +
-                'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
-                JSON.stringify(metadata) +
-                delimiter +
-                'Content-Type: ' + contentType + '\r\n\r\n' +
-                fileData+'\r\n'+
-                close_delim;
-
-                // console.log(multipartRequestBody);
-                var createRequest = window.gapi.client.request({
-                    'path': 'https://www.googleapis.com/upload/drive/v3/files',
-                    'method': 'POST',
-                    'params': {'uploadType': 'multipart'},
-                    'headers': {
-                        'Content-Type': 'multipart/related; boundary=' + boundary + ''
-                    },
-                    'body': multipartRequestBody});
-                 
-                  createRequest.execute(function(file) {
-                      console.log(file); // can comment out
-                  });
-
-            // TODO: Upload this data to user local cookies
-
-                setCurrentUser(hash);
-                history.push('/files');
-                setUnlockedFavicon();
-
-            } else {
-                // Get hashed password from user manifest
-
-                // TODO: Check cookies first
-
-                // Through drive
-
-                // How do we verify that we have the right file?? Security concern? (User could upload own file! But encryption...
-                let r = await getData(resp.files[0].id)
-
-                // Add decryption before this step
-                let jsonResp = JSON.parse(String.fromCharCode.apply(null, new Uint8Array(r)));
-
-                // console.log(jsonResp);
-                console.log(bcrypt.compareSync(pass, jsonResp.hash));
-
-                if (bcrypt.compareSync(pass, jsonResp.hash)) {
-                    setCurrentUser(jsonResp.hash);
-                    history.push('/files');
-                    setUnlockedFavicon();
-                } else {
-                    setCurrentUser(null);
-                }
-                // TODO: Authentication based on bcrypt response
-            }
-            setLoading(false)
+        // console.log(multipartRequestBody);
+        var createRequest = window.gapi.client.request({
+          path: "https://www.googleapis.com/upload/drive/v3/files",
+          method: "POST",
+          params: { uploadType: "multipart" },
+          headers: {
+            "Content-Type": "multipart/related; boundary=" + boundary + "",
+          },
+          body: multipartRequestBody,
         });
+
+        createRequest.execute(function (file) {
+          console.log(file); // can comment out
+        });
+
+        // TODO: Upload this data to user local cookies
+
+        setCurrentUser(hash);
+        history.push("/files");
+        setUnlockedFavicon();
+      } else {
+        // Get hashed password from user manifest
+
+        // TODO: Check cookies first
+
+        // Through drive
+
+        // How do we verify that we have the right file?? Security concern? (User could upload own file! But encryption...
+        let r = await getData(resp.files[0].id);
+
+        // Add decryption before this step
+        let jsonResp = JSON.parse(
+          String.fromCharCode.apply(null, new Uint8Array(r))
+        );
+
+        // console.log(jsonResp);
+        console.log(bcrypt.compareSync(pass, jsonResp.hash));
+
+        if (bcrypt.compareSync(pass, jsonResp.hash)) {
+          setCurrentUser(jsonResp.hash);
+          history.push("/files");
+          setUnlockedFavicon();
+        } else {
+          setCurrentUser(null);
+        }
+        // TODO: Authentication based on bcrypt response
+      }
+      setLoading(false);
+    });
   };
 
   const logout = async () => {
@@ -245,31 +249,36 @@ const AuthProvider = ({ children }) => {
 
   // helper function to get data
   const getData = async (fileId) => {
-    const file = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-        method: 'GET',
-        headers: new Headers({ 'Authorization': 'Bearer ' + window.gapi.auth.getToken().access_token }),
-    })
-    return await file.arrayBuffer()
-}
+    const file = await fetch(
+      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
+      {
+        method: "GET",
+        headers: new Headers({
+          Authorization: "Bearer " + window.gapi.auth.getToken().access_token,
+        }),
+      }
+    );
+    return await file.arrayBuffer();
+  };
 
-// download file to local device
-const download = async (fileId) => {
-    setLoading(true)
-    let filename = "file"
-    let filetype = "txt"    // temporary filetype
+  // download file to local device
+  const download = async (fileId) => {
+    setLoading(true);
+    let filename = "file";
+    let filetype = "txt"; // temporary filetype
     let request = window.gapi.client.drive.files.get({
-        'fileId': fileId,
+      fileId: fileId,
     });
-    request.execute(function(file) {
-        if (file.name) filename = file.name;
-        if (file.mimeType) filetype = file.mimeType;
+    request.execute(function (file) {
+      if (file.name) filename = file.name;
+      if (file.mimeType) filetype = file.mimeType;
     });
     let data = await getData(fileId);
-    const blob = new Blob([data], {type: filetype});
+    const blob = new Blob([data], { type: filetype });
     FileSaver.saveAs(blob, filename);
 
-    setLoading(false) 
-}
+    setLoading(false);
+  };
 
   const authTools = {
     currentUser,

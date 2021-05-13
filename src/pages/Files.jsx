@@ -4,20 +4,18 @@ import { Flex } from "@theme-ui/components";
 import React, { useState, useEffect } from "react";
 import Container from "../components/Container";
 import FileManager from "../components/fileManager";
-import {getAllFileData, formatFiles} from '../lib/gdrivefs/files.js' 
+import { getAllFileData, formatFiles } from "../lib/gdrivefs/files";
 import constants from "../constants";
 
-import sampleFiles from "../components/fileManager/sampleFiles";
-
 const Files = () => {
-
-  const [files, setFiles] = useState()
+  const [files, setFiles] = useState();
 
   useEffect(() => {
     document.title = `${constants.APP_NAME} | Files`;
     const f = async () => {
-      setFiles(await (formatFiles(await getAllFileData())))
-    }
+      setFiles(await formatFiles(await getAllFileData()));
+    };
+    f();
   }, []);
 
   return (
