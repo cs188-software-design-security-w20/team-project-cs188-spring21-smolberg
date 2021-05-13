@@ -37,15 +37,9 @@
     "@testing-library/jest-dom": "^5.11.4",
     "@testing-library/react": "^11.1.0",
     "@testing-library/user-event": "^12.1.10",
-<<<<<<< HEAD
     "@theme-ui/components": "^0.8.4",
     "@theme-ui/prism": "^0.8.4",
     "@theme-ui/theme-provider": "^0.8.4",
-=======
-    "@theme-ui/prism": "^0.6.1",
-    "file-saver": "^2.0.5",
-    "bcryptjs": "^2.4.3",
->>>>>>> main
     "moment": "^2.29.1",
     "node-forge": "^0.10.0",
     "prop-types": "^15.7.2",
