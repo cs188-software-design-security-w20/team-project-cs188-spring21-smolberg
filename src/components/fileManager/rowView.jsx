@@ -107,6 +107,8 @@ const Cell = ({ file, isLast, selected, setSelected, setModal }) => {
 Cell.propTypes = {
   file: PropTypes.shape({
     name: PropTypes.string,
+    id: PropTypes.string,
+    size: PropTypes.string,
     lastModTime: PropTypes.objectOf(Date),
     download: PropTypes.func,
     delete: PropTypes.func,
@@ -212,6 +214,7 @@ RowView.propTypes = {
     PropTypes.shape({
       name: PropTypes.string,
       id: PropTypes.string,
+      size: PropTypes.string,
       download: PropTypes.func,
       delete: PropTypes.func,
       lastModTime: PropTypes.objectOf(Date),

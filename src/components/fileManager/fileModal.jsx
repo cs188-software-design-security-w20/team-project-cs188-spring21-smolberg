@@ -48,6 +48,7 @@ const FileModal = ({ file, close }) => {
             Last Modified:{" "}
             {moment(file.lastModTime).format("MMM Do YYYY, h:mm:ss a")}
           </Text>
+          <Text>{`File Size: ${file.size}`}</Text>
           <Flex mt={4} sx={{ justifyContent: "center" }}>
             <Button mr={4} onClick={() => file.download()}>
               Download
@@ -65,6 +66,8 @@ FileModal.propTypes = {
     name: PropTypes.string,
     lastModTime: PropTypes.objectOf(Date),
     download: PropTypes.func,
+    size: PropTypes.string,
+    id: PropTypes.string,
     delete: PropTypes.func,
   }).isRequired,
   close: PropTypes.func.isRequired,

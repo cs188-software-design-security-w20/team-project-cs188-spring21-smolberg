@@ -54,7 +54,7 @@ class GDriveFS {
       const url = new URL("https://www.googleapis.com/drive/v3/files");
       url.searchParams.append(
         "fields",
-        "files(name, id, properties, modifiedTime)"
+        "files(name, id, properties, modifiedTime, size)"
       );
       url.searchParams.append("q", `'${this.baseDirId}' in parents`);
       if (token) {
@@ -84,19 +84,6 @@ class GDriveFS {
       };
       getPage(null, []);
     });
-  }
-
-  static formatFiles(files) {
-    const f = [];
-    for (let i = 0; i < files.length; i += 1) {
-      f.push({
-        name: files[i].name,
-        id: files[i].id,
-        sum: "d8837d6a773331f74705ad54e4f17c220acd89d28dd33e99451ba282fce9f8f9",
-        lastModTime: new Date(files[i].modifiedTime),
-      });
-    }
-    return f;
   }
 
   uploadFile(name, file, parent, properties, mimeType = "octet/stream") {

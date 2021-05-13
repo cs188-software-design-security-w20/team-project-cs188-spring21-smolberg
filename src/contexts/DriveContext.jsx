@@ -7,6 +7,7 @@ import { useAuth } from "./AuthContext";
 import { cipher } from "../lib/crypto";
 import { FileManifest } from "../lib/manifest/filemanifest";
 import { UserManifest } from "../lib/manifest/usermanifest";
+import { fileSize } from "../lib/misc";
 
 const DriveContext = React.createContext();
 
@@ -139,7 +140,7 @@ const DriveProvider = ({ children }) => {
       return {
         name: realName,
         id: f.id,
-        sum: "ab",
+        size: fileSize.getReadableFileSizeString(f.size),
         lastModTime: new Date(f.modifiedTime),
         download: async () => {
           const file = await driveFS.downloadFileByName(f.name);

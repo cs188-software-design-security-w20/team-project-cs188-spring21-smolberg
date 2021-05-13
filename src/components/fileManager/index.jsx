@@ -106,6 +106,8 @@ FileManager.propTypes = {
     PropTypes.shape({
       name: PropTypes.string,
       lastModTime: PropTypes.objectOf(Date),
+      size: PropTypes.string,
+      id: PropTypes.string,
       download: PropTypes.func,
       delete: PropTypes.func,
     })
