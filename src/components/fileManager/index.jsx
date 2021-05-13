@@ -1,4 +1,4 @@
-import { Button, Flex, Text } from "@theme-ui/components";
+import { Button, Flex, Input, Label, Text } from "@theme-ui/components";
 import React, { useState } from "react";
 import PropTypes from "prop-types";
 import moment from "moment";
@@ -7,9 +7,13 @@ import moment from "moment";
 // import { ReactComponent as RowButton } from '../../assets/ui-icons/row.svg'
 import { ReactComponent as UpArrow } from "../../assets/ui-icons/up-arrow.svg";
 import RowView from "./rowView";
+import { useDrive } from "../../contexts/DriveContext";
 
 const FileManager = ({ files, currentPath }) => {
   // const [currentView, setCurrentView] = useState('row')
+
+  const { uploadNewFile } = useDrive();
+
   const [sortMode, setSortMode] = useState(
     localStorage.getItem("sort-pref") || "lastMod-down"
   );
@@ -29,6 +33,10 @@ const FileManager = ({ files, currentPath }) => {
       moment(a.lastModTime).isAfter(moment(b.lastModTime))
     );
   }
+
+  const handleFileUpload = (e) => {
+    uploadNewFile(e.target.files[0]);
+  };
 
   return (
     <Flex
@@ -64,10 +72,15 @@ const FileManager = ({ files, currentPath }) => {
           <Text variant="subtitle">{currentPath}</Text>
         </Flex>
         <Flex>
-          <Button>
-            <Flex>
+          <Button p={0}>
+            <Label p={2} sx={{ cursor: "pointer" }}>
+              <Input
+                type="file"
+                sx={{ display: "none" }}
+                onChange={handleFileUpload}
+              />
               <Text>Add File</Text>
-            </Flex>
+            </Label>
           </Button>
           {/* If we add a tile/icon view, these buttons will allow switching */}
           {/* <Button mr={3} bg={currentView === 'tile' ? "default" : "gray"} onClick={(e) => setCurrentView('tile')}>
@@ -93,7 +106,8 @@ FileManager.propTypes = {
     PropTypes.shape({
       name: PropTypes.string,
       lastModTime: PropTypes.objectOf(Date),
-      sum: PropTypes.string,
+      download: PropTypes.func,
+      delete: PropTypes.func,
     })
   ).isRequired,
   currentPath: PropTypes.string.isRequired,

@@ -14,7 +14,7 @@ import FileModal from "./fileModal";
 
 const Cell = ({ file, isLast, selected, setSelected, setModal }) => {
   const bottomRadius = isLast ? "10px" : "0px";
-  const [sha256text, setSha256text] = useState("sha256");
+  // const [sha256text, setSha256text] = useState("sha256");
 
   const active = selected === file.name;
 
@@ -28,11 +28,11 @@ const Cell = ({ file, isLast, selected, setSelected, setModal }) => {
     }
   };
 
-  const copy256sum = async () => {
-    navigator.clipboard.writeText(file.sum);
-    setSha256text("sha256 copied to clipboard");
-    setTimeout(() => setSha256text("sha256"), 2 * 1000);
-  };
+  // const copy256sum = async () => {
+  //   navigator.clipboard.writeText(file.sum);
+  //   setSha256text("sha256 copied to clipboard");
+  //   setTimeout(() => setSha256text("sha256"), 2 * 1000);
+  // };
 
   const getLastModString = (d) => {
     const date = moment(d);
@@ -80,17 +80,17 @@ const Cell = ({ file, isLast, selected, setSelected, setModal }) => {
                   <InfoButton width="20px" height="20px" />
                 </Flex>
               </Button>
-              <Button mr={2} onClick={copy256sum}>
+              {/* <Button mr={2} onClick={copy256sum}>
                 <Flex sx={{ justifyContent: "center", alignItems: "center" }}>
                   <Text>{sha256text}</Text>
                 </Flex>
-              </Button>
-              <Button mr={2}>
+              </Button> */}
+              <Button mr={2} onClick={() => file.download()}>
                 <Flex sx={{ justifyContent: "center", alignItems: "center" }}>
                   <DLButton width="20px" height="20px" />
                 </Flex>
               </Button>
-              <Button>
+              <Button onClick={() => file.delete()}>
                 <Flex sx={{ justifyContent: "center", alignItems: "center" }}>
                   <DeleteButton width="20px" height="20px" />
                 </Flex>
@@ -108,10 +108,11 @@ Cell.propTypes = {
   file: PropTypes.shape({
     name: PropTypes.string,
     lastModTime: PropTypes.objectOf(Date),
-    sum: PropTypes.string,
+    download: PropTypes.func,
+    delete: PropTypes.func,
   }).isRequired,
   isLast: PropTypes.bool.isRequired,
-  selected: PropTypes.bool.isRequired,
+  selected: PropTypes.string.isRequired,
   setSelected: PropTypes.func.isRequired,
   setModal: PropTypes.func.isRequired,
 };
@@ -196,6 +197,7 @@ const RowView = ({ files, sort, changeSort }) => {
           selected={currentSelection}
           setSelected={setCurrentSelection}
           setModal={setShowModal}
+          key={f.id}
         />
       ))}
       {showModal && (
@@ -206,11 +208,15 @@ const RowView = ({ files, sort, changeSort }) => {
 };
 
 RowView.propTypes = {
-  files: PropTypes.arrayOf({
-    name: PropTypes.string,
-    lastModTime: PropTypes.objectOf(Date),
-    sum: PropTypes.string,
-  }).isRequired,
+  files: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string,
+      id: PropTypes.string,
+      download: PropTypes.func,
+      delete: PropTypes.func,
+      lastModTime: PropTypes.objectOf(Date),
+    })
+  ).isRequired,
   sort: PropTypes.string.isRequired,
   changeSort: PropTypes.func.isRequired,
 };

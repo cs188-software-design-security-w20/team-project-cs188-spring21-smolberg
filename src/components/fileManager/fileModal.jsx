@@ -48,10 +48,11 @@ const FileModal = ({ file, close }) => {
             Last Modified:{" "}
             {moment(file.lastModTime).format("MMM Do YYYY, h:mm:ss a")}
           </Text>
-          <Text>SHA-256 Sum: {file.sum}</Text>
           <Flex mt={4} sx={{ justifyContent: "center" }}>
-            <Button mr={4}>Download</Button>
-            <Button>Delete</Button>
+            <Button mr={4} onClick={() => file.download()}>
+              Download
+            </Button>
+            <Button onClick={() => file.delete()}>Delete</Button>
           </Flex>
         </Flex>
       </Card>
@@ -63,7 +64,8 @@ FileModal.propTypes = {
   file: PropTypes.shape({
     name: PropTypes.string,
     lastModTime: PropTypes.objectOf(Date),
-    sum: PropTypes.string,
+    download: PropTypes.func,
+    delete: PropTypes.func,
   }).isRequired,
   close: PropTypes.func.isRequired,
 };

@@ -7,15 +7,17 @@ const AES_MODE = "AES-CTR";
  * @param {File| Blob} file File to encrypt and upload
  * @param {string} key 32 bytes for the key
  * @param {string} iv 16 bytes for the IV
+ * @param {string} mode Encryption mode for AES. Defaults to AES_MODE
  * @returns {Promise} the key, initialization vector, then encrypted file name in a list
  */
 const encryptFile = (
   file,
   key = forge.random.getBytesSync(32),
-  iv = forge.random.getBytesSync(16)
+  iv = forge.random.getBytesSync(16),
+  mode = AES_MODE
 ) =>
   new Promise((resolve, reject) => {
-    const cipher = forge.cipher.createCipher(AES_MODE, key);
+    const cipher = forge.cipher.createCipher(mode, key);
     const encryptedFilename = forge.util.binary.hex
       .encode(forge.random.getBytesSync(32))
       .toString();
@@ -42,9 +44,10 @@ const encryptFile = (
  * @param {ArrayBuffer} encryptedBytes
  * @param {string} key
  * @param {string} iv
+ * @param {string} mode Encryption mode for AES. Defaults to AES_MODE
  */
-const decrypt = (encryptedBytes, key, iv) => {
-  const decipher = forge.cipher.createDecipher(AES_MODE, key);
+const decrypt = (encryptedBytes, key, iv, mode = AES_MODE) => {
+  const decipher = forge.cipher.createDecipher(mode, key);
   decipher.start({ iv });
   decipher.update(forge.util.createBuffer(encryptedBytes, "raw"));
   if (decipher.finish() === false) {

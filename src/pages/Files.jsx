@@ -5,17 +5,21 @@ import React, { useState, useEffect } from "react";
 import Container from "../components/Container";
 import FullPageSpinner from "../components/FullPageSpinner";
 import FileManager from "../components/fileManager";
-import { getAllFileData, formatFiles } from "../lib/gdrivefs/files";
 import constants from "../constants";
+import { useDrive } from "../contexts/DriveContext";
 
 const Files = () => {
   const [files, setFiles] = useState();
   const [loading, setLoading] = useState(true);
 
+  const { generateFileInfo } = useDrive();
+
   useEffect(() => {
     document.title = `${constants.APP_NAME} | Files`;
     const f = async () => {
-      setFiles(await formatFiles(await getAllFileData()));
+      setLoading(true);
+      const newFiles = await generateFileInfo();
+      setFiles(newFiles);
       setLoading(false);
     };
     f();

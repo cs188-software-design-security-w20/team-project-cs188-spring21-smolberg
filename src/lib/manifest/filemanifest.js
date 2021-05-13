@@ -1,3 +1,4 @@
+import * as forge from "node-forge";
 import { cipher } from "../crypto";
 /** File Manifest Constructor
  *
@@ -7,8 +8,8 @@ class FileManifest {
   //   this.files = {};
   // }
 
-  constructor(manifest) {
-    this.files = manifest ? JSON.parse(manifest) : {};
+  constructor(manifest = {}) {
+    this.files = manifest;
   }
 
   // maybe add a manifest.settings or something
@@ -27,6 +28,12 @@ class FileManifest {
     return this.files[filename];
   }
 
+  searchByEncryptedName(query) {
+    return Object.keys(this.files).find(
+      (o) => this.files[o].encFilename === query
+    );
+  }
+
   /**
    * Deletes file from manifest
    * @param {String} filename File to delete
@@ -41,19 +48,27 @@ class FileManifest {
    * @param {String} oldFilename
    */
   renameFile(newFilename, oldFilename) {
-    this.files[newFilename] = oldFilename;
+    this.files[newFilename] = this.files[oldFilename];
     delete this.files[oldFilename];
   }
 
   stringify() {
-    return JSON.stringify(this.files);
+    const newJson = {};
+    Object.entries(this.files).forEach(([k, v]) => {
+      newJson[k] = {
+        key: forge.util.encode64(v.key),
+        iv: forge.util.encode64(v.iv),
+        encFilename: v.encFilename,
+      };
+    });
+    return JSON.stringify(newJson);
   }
 
   static parse(manifest) {
     return JSON.parse(manifest);
   }
 
-  encrypt(key, iv) {
+  encryptWithKey(key, iv) {
     return cipher.encryptFile(
       new Blob([this.stringify()], { type: "application/json" }),
       key,
@@ -61,10 +76,23 @@ class FileManifest {
     );
   }
 
-  static decrypt(encryptedManifest, key, iv) {
-    return new FileManifest(
-      cipher.decrypt(encryptedManifest, key, iv).toString()
+  encrypt() {
+    return cipher.encryptFile(
+      new Blob([this.stringify()], { type: "application/json" })
     );
+  }
+
+  static decrypt(encryptedManifest, key, iv) {
+    const decrypted = JSON.parse(cipher.decrypt(encryptedManifest, key, iv));
+    const newJson = {};
+    Object.entries(decrypted).forEach(([k, v]) => {
+      newJson[k] = {
+        key: forge.util.decode64(v.key),
+        iv: forge.util.decode64(v.iv),
+        encFilename: v.encFilename,
+      };
+    });
+    return new FileManifest(newJson);
   }
 }
 

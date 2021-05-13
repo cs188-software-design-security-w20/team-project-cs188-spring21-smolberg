@@ -1,12 +1,15 @@
-/* eslint-disable */
-
 import React, { useState, useContext, useEffect } from "react";
 import PropTypes from "prop-types";
 import * as forge from "node-forge";
 import * as bcrypt from "bcryptjs";
+import { useHistory } from "react-router-dom";
 import { favicon } from "../lib/misc";
-import { useHistory } from "react-router";
 import FullPageSpinner from "../components/FullPageSpinner";
+import constants from "../constants";
+import GDriveFS from "../lib/gdrivefs";
+import { UserManifest } from "../lib/manifest/usermanifest";
+import FileNotFoundError from "../lib/gdrivefs/exceptions/FileNotFoundError";
+import { FileManifest } from "../lib/manifest/filemanifest";
 
 const AuthContext = React.createContext();
 
@@ -26,11 +29,12 @@ const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   // Don't render anything before auth status has been realized
   const [loading, setLoading] = useState(false);
+  const [driveFS, setDriveFS] = useState(null);
 
   const history = useHistory();
 
   /**
-   * Load Google API OAutg client.
+   * Load Google API OAuth client.
    * Log user in automatically, if cookies exist
    */
   useEffect(() => {
@@ -50,6 +54,9 @@ const AuthProvider = ({ children }) => {
                 setCurrentOAuthUser(
                   window.gapi.auth2.getAuthInstance().currentUser
                 );
+                const x = new GDriveFS();
+                x.init();
+                setDriveFS(x);
               }
             },
             (e) => new Error(e.details)
@@ -71,12 +78,6 @@ const AuthProvider = ({ children }) => {
    */
   const setUnlockedFavicon = () => favicon.changeFavicon("unlocked.png");
 
-  const signup = () => {
-    setLoading(true);
-    // TODO
-    setLoading(false);
-  };
-
   /**
    * Sign user in to Google
    * @param {bool} isSignedIn
@@ -93,13 +94,16 @@ const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Sign user in to Google
+   * Sign user in to Google and initialize filesystem
    */
   const loginOAuth = async () => {
     try {
       await updateOAuthStatus(
         window.gapi.auth2.getAuthInstance().isSignedIn.get()
       );
+      const x = new GDriveFS();
+      x.init();
+      setDriveFS(x);
     } catch {
       throw Error();
     }
@@ -113,6 +117,63 @@ const AuthProvider = ({ children }) => {
     setCurrentOAuthUser(null);
   };
 
+  const signup = async (pass) => {
+    setLoading(true);
+
+    // Generate salt and hash
+    const salt = bcrypt.genSaltSync(10);
+    const hash = bcrypt.hashSync(pass, salt);
+
+    // Generate password derived key and salt
+    const userKey = forge.pkcs5.pbkdf2(pass, constants.SALTS.KEY, 10_000, 32);
+    const userIv = forge.random.getBytesSync(16);
+
+    const userManifest = new UserManifest(hash);
+    const encryptedManifest = await userManifest.encrypt(userKey, userIv);
+
+    // Generate manifest name
+    const md = forge.md.sha256.create();
+    md.update(bcrypt.hashSync(pass, `$2a$12$${constants.SALTS.MPW}`));
+    const manifestName = md.digest().toHex();
+
+    const encodedFile = forge.util.binary.raw.decode(
+      encryptedManifest.cipher.getBytes()
+    );
+
+    // Upload Manifest
+    await driveFS.uploadFile(manifestName, new Blob([encodedFile]), null, {
+      iv: forge.util.encodeUtf8(userIv),
+    });
+
+    // Create File Manifest
+    const fileManifest = new FileManifest();
+    // Encrypt and upload File Manifest
+    const encryptedFileManifest = await fileManifest.encryptWithKey(
+      userManifest.fileManifest.key,
+      userManifest.fileManifest.iv
+    );
+
+    await driveFS.uploadFile(
+      userManifest.fileManifest.name,
+      // prettier-ignore
+      new Blob([
+        forge.util.binary.raw.decode(encryptedFileManifest.cipher.getBytes())
+      ]),
+      null,
+      null
+    );
+
+    setCurrentUser({
+      key: userKey,
+      iv: userIv,
+      userManifest,
+      fileManifest,
+      manifestName,
+    });
+    history.push("/files");
+    setLoading(false);
+  };
+
   /**
    * Log user in using their master password.
    * This is done by pulling their manifest from drive.
@@ -123,155 +184,74 @@ const AuthProvider = ({ children }) => {
   const login = async (pass) => {
     /**
      *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     * DO NOT EDIT THIS FUNCTION. WIP
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
-     *
+     * TODO: Add key and iv to currentUser
      */
     setLoading(true);
 
-    const key = forge.pkcs5.pbkdf2(pass, "", 10, 16);
-    console.log(key);
+    // Generate name of manifest
+    const md = forge.md.sha256.create();
+    md.update(bcrypt.hashSync(pass, `$2a$12$${constants.SALTS.MPW}`));
+    const manifestName = md.digest().toHex();
 
-    //--------------WIP DO NOT EDIT---------------------------------------------------------------------------------------------------------
-    let manifestRequest = "";
+    // Get users key
+    const key = forge.pkcs5.pbkdf2(pass, constants.SALTS.KEY, 10_000, 32);
 
-    // Double check that OAuth is still valid?
+    // Look for manifest
+    let userManifest = null;
+    let newSignUp = false;
+    let iv = null;
+    try {
+      const manifestQuery = await driveFS.downloadFileByName(manifestName);
+      iv = forge.util.decodeUtf8(manifestQuery.props.properties.iv);
+      userManifest = UserManifest.decrypt(manifestQuery.file, key, iv);
+    } catch (e) {
+      if (e instanceof FileNotFoundError) {
+        signup(pass);
+        newSignUp = true;
+      } else {
+        throw e;
+      }
+    }
 
-    // Password Validation
+    if (newSignUp) {
+      setLoading(false);
+      return;
+    }
 
-    // TODO: add failure handling!
+    // Find File Manifest
+    const fileManifestQuery = await driveFS.downloadFileByName(
+      userManifest.fileManifest.name
+    );
+    const fileManifest = FileManifest.decrypt(
+      fileManifestQuery.file,
+      userManifest.fileManifest.key,
+      userManifest.fileManifest.iv
+    );
 
-    // Determine if new user by accessing manifest (this also checks the trash)
-    manifestRequest = window.gapi.client.request({
-      path: "https://www.googleapis.com/drive/v3/files",
-      method: "GET",
-      params: { q: "name = 'manifest1.json'" },
-    });
-
-    return new Promise((resolve) => {
-      manifestRequest.execute(async (resp) => {
-        // Check if manifest exists
-        let newUser = resp.files.length === 0;
-        var hash = "";
-
-        // Save user password hash if not enrolled
-        if (newUser) {
-          // Generate salt and hash
-          var salt = bcrypt.genSaltSync(10); // TODO: is random salt okay?
-          hash = bcrypt.hashSync(pass, salt);
-
-          // Testing
-
-          // console.log("Password: " + pass);
-          // console.log("Hash: " + hash);
-          // console.log("Status: " + bcrypt.compareSync(pass, hash));
-
-          // Unencrypted json data
-          var username = "hi"; // TODO: replace with user google account
-          var jsonData = {
-            username: username,
-            hash: hash,
-            salt: salt, // Needed?
-          };
-
-          var fileData = JSON.stringify(jsonData, 0);
-
-          // Upload to Google Drive
-
-          const boundary = "foo_bar_baz";
-          const delimiter = "\r\n--" + boundary + "\r\n";
-          const close_delim = "\r\n--" + boundary + "--";
-          var fileName = "manifest1.json";
-
-          // TODO: encrypt file data before uploading to drive
-
-          var contentType = "application/json";
-          var metadata = {
-            name: fileName,
-            mimeType: contentType,
-          };
-
-          var multipartRequestBody =
-            delimiter +
-            "Content-Type: application/json; charset=UTF-8\r\n\r\n" +
-            JSON.stringify(metadata) +
-            delimiter +
-            "Content-Type: " +
-            contentType +
-            "\r\n\r\n" +
-            fileData +
-            "\r\n" +
-            close_delim;
-
-          // console.log(multipartRequestBody);
-          var createRequest = window.gapi.client.request({
-            path: "https://www.googleapis.com/upload/drive/v3/files",
-            method: "POST",
-            params: { uploadType: "multipart" },
-            headers: {
-              "Content-Type": "multipart/related; boundary=" + boundary + "",
-            },
-            body: multipartRequestBody,
-          });
-
-          createRequest.execute(function (file) {
-            console.log(file); // can comment out
-          });
-
-          // TODO: Upload this data to user local cookies
-
-          setCurrentUser(hash);
-          history.push("/files");
-          setUnlockedFavicon();
-        } else {
-          // Get hashed password from user manifest
-
-          // TODO: Check cookies first
-
-          // Through drive
-
-          // How do we verify that we have the right file?? Security concern? (User could upload own file! But encryption...
-          let r = await getData(resp.files[0].id);
-
-          // Add decryption before this step
-          let jsonResp = JSON.parse(
-            String.fromCharCode.apply(null, new Uint8Array(r))
-          );
-
-          // console.log(jsonResp);
-
-          if (bcrypt.compareSync(pass, jsonResp.hash)) {
-            setCurrentUser(jsonResp.hash);
-            history.push("/files");
-            setUnlockedFavicon();
-            setLoading(false);
-            resolve(true);
-          } else {
-            setCurrentUser(null);
-            setLoading(false);
-            resolve(false);
-          }
-          // TODO: Authentication based on bcrypt response
-        }
+    if (bcrypt.compareSync(pass, userManifest.mpwHash)) {
+      setCurrentUser({
+        key,
+        iv,
+        userManifest,
+        fileManifest,
+        manifestName,
       });
+      history.push("/files");
+      setUnlockedFavicon();
+      setLoading(false);
+    } else {
+      setCurrentUser(null);
+      setLoading(false);
+    }
+  };
+
+  const updateUser = (iv, userManifest, fileManifest) => {
+    setCurrentUser({
+      key: currentUser.key,
+      manifestName: currentUser.manifestName,
+      iv,
+      fileManifest,
+      userManifest,
     });
   };
 
@@ -287,39 +267,6 @@ const AuthProvider = ({ children }) => {
     setLoading(false);
   };
 
-  // helper function to get data
-  const getData = async (fileId) => {
-    const file = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`,
-      {
-        method: "GET",
-        headers: new Headers({
-          Authorization: "Bearer " + window.gapi.auth.getToken().access_token,
-        }),
-      }
-    );
-    return await file.arrayBuffer();
-  };
-
-  // download file to local device
-  const download = async (fileId) => {
-    setLoading(true);
-    let filename = "file";
-    let filetype = "txt"; // temporary filetype
-    let request = window.gapi.client.drive.files.get({
-      fileId: fileId,
-    });
-    request.execute(function (file) {
-      if (file.name) filename = file.name;
-      if (file.mimeType) filetype = file.mimeType;
-    });
-    let data = await getData(fileId);
-    const blob = new Blob([data], { type: filetype });
-    FileSaver.saveAs(blob, filename);
-
-    setLoading(false);
-  };
-
   const authTools = {
     currentUser,
     currentOAuthUser,
@@ -328,6 +275,8 @@ const AuthProvider = ({ children }) => {
     signup,
     OAuthLogOut,
     logout,
+    updateUser,
+    driveFS,
   };
 
   return (

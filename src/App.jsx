@@ -5,6 +5,7 @@ import React, { useEffect } from "react";
 import { Route, BrowserRouter as Router, Switch } from "react-router-dom";
 import constants from "./constants";
 import { AuthProvider } from "./contexts/AuthContext";
+import { DriveProvider } from "./contexts/DriveContext";
 import { favicon } from "./lib/misc";
 import Files from "./pages/Files";
 import LandingPage from "./pages/LandingPage";
@@ -24,14 +25,16 @@ const App = () => {
     <Router>
       <ThemeProvider theme={theme}>
         <AuthProvider>
-          <Switch>
-            {/* Example of a regular route */}
-            <Route exact path="/" component={LandingPage} />
-            <Route exact path="/login" component={Login} />
-            {/* Example of a private route w/ redirects to /login if not a approved page/user */}
-            <PrivateRoute exact path="/files" component={Files} />
-            <Route component={NotFound} />
-          </Switch>
+          <DriveProvider>
+            <Switch>
+              {/* Example of a regular route */}
+              <Route exact path="/" component={LandingPage} />
+              <Route exact path="/login" component={Login} />
+              {/* Example of a private route w/ redirects to /login if not a approved page/user */}
+              <PrivateRoute exact path="/files" component={Files} />
+              <Route component={NotFound} />
+            </Switch>
+          </DriveProvider>
         </AuthProvider>
       </ThemeProvider>
     </Router>
