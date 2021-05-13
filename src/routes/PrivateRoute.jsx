@@ -1,4 +1,6 @@
+/* eslint-disable react/jsx-props-no-spreading */
 import React from "react";
+import PropTypes from "prop-types";
 import { Redirect, Route } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 
@@ -9,11 +11,15 @@ const PrivateRoute = ({ component: Component, ...rest }) => {
   return (
     <Route
       {...rest}
-      render={(props) => {
-        return loggedIn ? <Component {...props} /> : <Redirect to="/login" />;
-      }}
-    ></Route>
+      render={(props) =>
+        loggedIn ? <Component {...props} /> : <Redirect to="/login" />
+      }
+    />
   );
+};
+
+PrivateRoute.propTypes = {
+  component: PropTypes.elementType.isRequired,
 };
 
 export default PrivateRoute;

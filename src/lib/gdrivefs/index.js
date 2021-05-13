@@ -1,3 +1,4 @@
-import * as files from './files'
+import * as files from "./files";
 
-export { files }
+// eslint-disable-next-line import/prefer-default-export
+export { files };
