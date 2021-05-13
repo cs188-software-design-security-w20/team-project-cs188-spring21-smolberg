@@ -149,7 +149,7 @@ OAuthWindow.defaultProps = {
   currentOAuthUser: null,
 };
 
-const MPWWindow = ({ passwordInput, handleLogin, goBack }) => (
+const MPWWindow = ({ passwordInput, handleLogin, wrongPwd, goBack }) => (
   <Flex
     sx={{
       height: "100%",
@@ -188,6 +188,7 @@ const MPWWindow = ({ passwordInput, handleLogin, goBack }) => (
         value={passwordInput.bind.value}
         onChange={passwordInput.bind.onChange}
       />
+      {wrongPwd && <Text mb={2}>The password you entered was invalid</Text>}
       <Button onClick={handleLogin}>Login</Button>
     </Flex>
   </Flex>
@@ -204,6 +205,7 @@ MPWWindow.propTypes = {
     }),
   }).isRequired,
   handleLogin: PropTypes.func.isRequired,
+  wrongPwd: PropTypes.bool.isRequired,
   goBack: PropTypes.func.isRequired,
 };
 
@@ -211,6 +213,7 @@ const Login = () => {
   const { currentOAuthUser, loginOAuth, OAuthLogOut, login } = useAuth();
   const [currentPage, setCurrentPage] = useState(currentOAuthUser ? 2 : 1);
   const [canEnterPwd, setCanEnterPwd] = useState(currentOAuthUser !== null);
+  const [wrongPwd, setWrongPwd] = useState(false);
   const passwordInput = useInput("");
 
   useEffect(() => {
@@ -225,9 +228,12 @@ const Login = () => {
     }
   };
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    login(passwordInput.v);
+    const success = await login(passwordInput.v);
+    if (!success) {
+      setWrongPwd(true);
+    }
   };
 
   return (
@@ -254,6 +260,7 @@ const Login = () => {
               <MPWWindow
                 handleLogin={handleLogin}
                 passwordInput={passwordInput}
+                wrongPwd={wrongPwd}
                 goBack={() => setCurrentPage(1)}
               />
             )}
