@@ -8,11 +8,12 @@ import {
   Image,
   IconButton,
   Link,
+  Label,
 } from "@theme-ui/components";
 import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import Container from "../components/Container";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth, AuthStatus } from "../contexts/AuthContext";
 import useInput from "../hooks/useInput";
 
 import googleLogo from "../assets/logos/google_mini.svg";
@@ -21,7 +22,12 @@ import { ReactComponent as RightArrow } from "../assets/ui-icons/right-arrow.svg
 import constants from "../constants";
 
 const PageIndicatorButton = ({ onClick, active }) => (
-  <IconButton enabled={false} onClick={onClick} sx={{ cursor: "pointer" }}>
+  <IconButton
+    enabled={false}
+    onClick={onClick}
+    mt={2}
+    sx={{ cursor: "pointer" }}
+  >
     <svg
       xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 24 24"
@@ -81,7 +87,7 @@ const OAuthWindow = ({
       <Text variant="subheading" mt={2} mb={4}>
         Connect to Google Drive
       </Text>
-      <Text mb={1}>
+      <Text mb={2}>
         Connect your Google account so this app can access your drive
       </Text>
       <Flex
@@ -149,7 +155,14 @@ OAuthWindow.defaultProps = {
   currentOAuthUser: null,
 };
 
-const MPWWindow = ({ passwordInput, handleLogin, wrongPwd, goBack }) => (
+const MPWWindow = ({
+  passwordInput,
+  passwordVerifyInput,
+  handleLogin,
+  goBack,
+  authStatus,
+  pwdNoMatch,
+}) => (
   <Flex
     sx={{
       height: "100%",
@@ -160,10 +173,14 @@ const MPWWindow = ({ passwordInput, handleLogin, wrongPwd, goBack }) => (
     }}
   >
     <Text variant="subheading" mt={2} mb={4}>
-      Enter your Master Password
+      {authStatus === AuthStatus.SIGNING_UP
+        ? "Choose your Master Password"
+        : "Enter your Master Password"}
     </Text>
     <Text mb={2}>
-      Verify your master password, so we can encrypt and decrypt your documents
+      {authStatus === AuthStatus.SIGNING_UP
+        ? "Your master password will be the only way to gain access to your files. If you forget this password, all of your content will be lost"
+        : "Verify your master password, so we can encrypt and decrypt your documents"}
     </Text>
     <Flex
       sx={{
@@ -188,33 +205,56 @@ const MPWWindow = ({ passwordInput, handleLogin, wrongPwd, goBack }) => (
         value={passwordInput.bind.value}
         onChange={passwordInput.bind.onChange}
       />
-      {wrongPwd && <Text mb={2}>The password you entered was invalid</Text>}
+      {authStatus === AuthStatus.SIGNING_UP && (
+        <Flex sx={{ flexDirection: "column", width: "100%" }}>
+          <Label>Verify your password</Label>
+          <Input
+            mb={2}
+            type="password"
+            value={passwordVerifyInput.bind.value}
+            onChange={passwordVerifyInput.bind.onChange}
+          />
+        </Flex>
+      )}
+      {authStatus === AuthStatus.WRONG_PASSWORD && (
+        <Text mb={2}>The password you entered was invalid</Text>
+      )}
+      {authStatus === AuthStatus.UNSECURE_PASSWORD && (
+        <Text mb={2}>The password you entered is not secure enough</Text>
+      )}
+      {pwdNoMatch && <Text mb={2}>Your passwords do not match</Text>}
       <Button onClick={handleLogin}>Login</Button>
     </Flex>
   </Flex>
 );
 
+const pwdInputPropType = PropTypes.shape({
+  v: PropTypes.node.isRequired,
+  setV: PropTypes.func.isRequired,
+  reset: PropTypes.func.isRequired,
+  bind: PropTypes.shape({
+    value: PropTypes.node.isRequired,
+    onChange: PropTypes.func.isRequired,
+  }),
+});
+
 MPWWindow.propTypes = {
-  passwordInput: PropTypes.shape({
-    v: PropTypes.node.isRequired,
-    setV: PropTypes.func.isRequired,
-    reset: PropTypes.func.isRequired,
-    bind: PropTypes.shape({
-      value: PropTypes.node.isRequired,
-      onChange: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
+  passwordInput: pwdInputPropType.isRequired,
+  passwordVerifyInput: pwdInputPropType.isRequired,
+  authStatus: PropTypes.oneOf(Object.values(AuthStatus)).isRequired,
   handleLogin: PropTypes.func.isRequired,
-  wrongPwd: PropTypes.bool.isRequired,
   goBack: PropTypes.func.isRequired,
+  pwdNoMatch: PropTypes.bool.isRequired,
 };
 
 const Login = () => {
-  const { currentOAuthUser, loginOAuth, OAuthLogOut, login } = useAuth();
+  const { currentOAuthUser, authStatus, loginOAuth, OAuthLogOut, login } =
+    useAuth();
   const [currentPage, setCurrentPage] = useState(currentOAuthUser ? 2 : 1);
   const [canEnterPwd, setCanEnterPwd] = useState(currentOAuthUser !== null);
-  const [wrongPwd, setWrongPwd] = useState(false);
+  const [pwdNoMatch, setPwdNoMatch] = useState(false);
   const passwordInput = useInput("");
+  const passwordVerifyInput = useInput("");
 
   useEffect(() => {
     document.title = `${constants.APP_NAME} | Login`;
@@ -230,16 +270,19 @@ const Login = () => {
 
   const handleLogin = async (e) => {
     e.preventDefault();
-    const success = await login(passwordInput.v);
-    if (!success) {
-      setWrongPwd(true);
+    if (authStatus === AuthStatus.SIGNING_UP) {
+      if (passwordInput.v !== passwordVerifyInput.v) {
+        setPwdNoMatch(true);
+        return;
+      }
     }
+    await login(passwordInput.v);
   };
 
   return (
     <Container>
       <Flex sx={{ justifyContent: "center" }}>
-        <Card mt={4} sx={{ height: "350px", width: "500px" }}>
+        <Card mt={4} sx={{ width: "500px" }}>
           <Flex
             sx={{
               height: "100%",
@@ -260,7 +303,9 @@ const Login = () => {
               <MPWWindow
                 handleLogin={handleLogin}
                 passwordInput={passwordInput}
-                wrongPwd={wrongPwd}
+                passwordVerifyInput={passwordVerifyInput}
+                authStatus={authStatus}
+                pwdNoMatch={pwdNoMatch}
                 goBack={() => setCurrentPage(1)}
               />
             )}
