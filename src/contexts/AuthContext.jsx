@@ -121,6 +121,13 @@ const AuthProvider = ({ children }) => {
   const signup = async (pass) => {
     setLoading(true);
 
+    // Check length
+    if (pass.length < 8) {
+      setCurrentUser(null);
+      setLoading(false);
+      return;
+    }
+
     // Generate salt and hash
     const salt = bcrypt.genSaltSync(10);
     const hash = bcrypt.hashSync(pass, salt);
