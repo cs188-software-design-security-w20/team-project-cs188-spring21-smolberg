@@ -8,8 +8,9 @@ import FullPageSpinner from "../components/FullPageSpinner";
 import constants from "../constants";
 import GDriveFS from "../lib/gdrivefs";
 import { UserManifest } from "../lib/manifest/usermanifest";
-import FileNotFoundError from "../lib/gdrivefs/exceptions/FileNotFoundError";
+// import FileNotFoundError from "../lib/gdrivefs/exceptions/FileNotFoundError";
 import { FileManifest } from "../lib/manifest/filemanifest";
+// import constants from "../constants";
 
 const AuthContext = React.createContext();
 
@@ -196,24 +197,23 @@ const AuthProvider = ({ children }) => {
     // Get users key
     const key = forge.pkcs5.pbkdf2(pass, constants.SALTS.KEY, 10_000, 32);
 
+    // Check if new user
+    const folderData = await driveFS.getAllFileData();
+    if (folderData.length === 0) {
+      signup(pass);
+      setLoading(false);
+      return;
+    }
+
     // Look for manifest
     let userManifest = null;
-    let newSignUp = false;
     let iv = null;
     try {
       const manifestQuery = await driveFS.downloadFileByName(manifestName);
       iv = forge.util.decodeUtf8(manifestQuery.props.properties.iv);
       userManifest = UserManifest.decrypt(manifestQuery.file, key, iv);
     } catch (e) {
-      if (e instanceof FileNotFoundError) {
-        signup(pass);
-        newSignUp = true;
-      } else {
-        throw e;
-      }
-    }
-
-    if (newSignUp) {
+      setCurrentUser(null);
       setLoading(false);
       return;
     }
