@@ -12,6 +12,14 @@ import { UserManifest } from "../lib/manifest/usermanifest";
 import { FileManifest } from "../lib/manifest/filemanifest";
 // import constants from "../constants";
 
+const AuthStatus = Object.freeze({
+  LOGGED_OUT: "logged_out",
+  LOGGED_IN: "logged_in",
+  SIGNING_UP: "signing_up",
+  WRONG_PASSWORD: "wrong_password",
+  UNSECURE_PASSWORD: "unsecure_password",
+});
+
 const AuthContext = React.createContext();
 
 // Array of API discovery doc URLs for APIs
@@ -31,6 +39,7 @@ const AuthProvider = ({ children }) => {
   // Don't render anything before auth status has been realized
   const [loading, setLoading] = useState(false);
   const [driveFS, setDriveFS] = useState(null);
+  const [authStatus, setAuthStatus] = useState(AuthStatus.LOGGED_OUT);
 
   const history = useHistory();
 
@@ -103,8 +112,13 @@ const AuthProvider = ({ children }) => {
         window.gapi.auth2.getAuthInstance().isSignedIn.get()
       );
       const x = new GDriveFS();
-      x.init();
+      await x.init();
       setDriveFS(x);
+      // Check if new user
+      const folderData = await x.getAllFileData();
+      if (folderData.length === 0) {
+        setAuthStatus(AuthStatus.SIGNING_UP);
+      }
     } catch {
       throw Error();
     }
@@ -115,15 +129,18 @@ const AuthProvider = ({ children }) => {
    */
   const OAuthLogOut = async () => {
     await window.gapi.auth2.getAuthInstance().signOut();
+    setAuthStatus(AuthStatus.LOGGED_OUT);
     setCurrentOAuthUser(null);
   };
 
   const signup = async (pass) => {
     setLoading(true);
+    setAuthStatus(AuthStatus.SIGNING_UP);
 
     // Check length
     if (pass.length < 8) {
       setCurrentUser(null);
+      setAuthStatus(AuthStatus.UNSECURE_PASSWORD);
       setLoading(false);
       return;
     }
@@ -178,6 +195,7 @@ const AuthProvider = ({ children }) => {
       fileManifest,
       manifestName,
     });
+    setAuthStatus(AuthStatus.LOGGED_IN);
     history.push("/files");
     setLoading(false);
   };
@@ -190,10 +208,6 @@ const AuthProvider = ({ children }) => {
    * @returns {Promise} Success or failure
    */
   const login = async (pass) => {
-    /**
-     *
-     * TODO: Add key and iv to currentUser
-     */
     setLoading(true);
 
     // Generate name of manifest
@@ -204,7 +218,6 @@ const AuthProvider = ({ children }) => {
     // Get users key
     const key = forge.pkcs5.pbkdf2(pass, constants.SALTS.KEY, 10_000, 32);
 
-    // Check if new user
     const folderData = await driveFS.getAllFileData();
     if (folderData.length === 0) {
       signup(pass);
@@ -221,6 +234,7 @@ const AuthProvider = ({ children }) => {
       userManifest = UserManifest.decrypt(manifestQuery.file, key, iv);
     } catch (e) {
       setCurrentUser(null);
+      setAuthStatus(AuthStatus.WRONG_PASSWORD);
       setLoading(false);
       return;
     }
@@ -245,9 +259,11 @@ const AuthProvider = ({ children }) => {
       });
       history.push("/files");
       setUnlockedFavicon();
+      setAuthStatus(AuthStatus.LOGGED_IN);
       setLoading(false);
     } else {
       setCurrentUser(null);
+      setAuthStatus(AuthStatus.WRONG_PASSWORD);
       setLoading(false);
     }
   };
@@ -270,6 +286,7 @@ const AuthProvider = ({ children }) => {
     await wait(1000);
     await OAuthLogOut();
     setCurrentUser(null);
+    setAuthStatus(AuthStatus.LOGGED_OUT);
     setLockedFavicon();
     setLoading(false);
   };
@@ -277,6 +294,7 @@ const AuthProvider = ({ children }) => {
   const authTools = {
     currentUser,
     currentOAuthUser,
+    authStatus,
     login,
     loginOAuth,
     signup,
@@ -297,4 +315,4 @@ AuthProvider.propTypes = {
   children: PropTypes.element.isRequired,
 };
 
-export { AuthProvider, useAuth };
+export { AuthProvider, AuthStatus, useAuth };
