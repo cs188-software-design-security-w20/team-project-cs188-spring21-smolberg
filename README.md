@@ -2,7 +2,7 @@
 
 ## Staging build
 
-Our CI/CD environment will build all changes on our main branch. You can preview builds [here](https://staging-smolberg.netlify.app).
+Our CI/CD environment will build all changes on our main branch. You can preview builds [here](https://smolberg.netlify.app/).
 
 When you submit a PR, netlify will run build checks on your changes and also create a build preview website for you. The preview website will not work because the newly generated domain needs to be added to out Google API domain list. Once you do that, the preview will work.
 
