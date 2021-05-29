@@ -138,7 +138,7 @@ const AuthProvider = ({ children }) => {
     setAuthStatus(AuthStatus.SIGNING_UP);
 
     // Check length
-    if (pass.length < 8) {
+    if (pass.length < 8 || pass.length > 72) {
       setCurrentUser(null);
       setAuthStatus(AuthStatus.UNSECURE_PASSWORD);
       setLoading(false);
