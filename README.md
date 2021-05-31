@@ -6,6 +6,20 @@ Our CI/CD environment will build all changes on our main branch. You can preview
 
 When you submit a PR, netlify will run build checks on your changes and also create a build preview website for you. The preview website will not work because the newly generated domain needs to be added to out Google API domain list. Once you do that, the preview will work.
 
+## Whitelisting accounts
+
+The build hosted [here](https://smolberg.netlify.app/) will only work with pre-approved Google accounts. To whitelist your account, open an issue on this project.
+
+## Building
+
+To build the website, first add a `.env` file in the project root. The file should contain your Google API keys. Make sure your GCP account has OAuth and Drive API enabled. The files contents will look like:
+```
+REACT_APP_GOOGLE_DRIVE_API_KEY=<KEY>
+REACT_APP_GOOGLE_DRIVE_CLIENT_ID=<SECRET>
+```
+
+Then run `yarn build` to build the project and then you can host the website.
+
 ## Contributing
 
 Pre commit hooks and linters will ensure code correctness, quality and formatting.
